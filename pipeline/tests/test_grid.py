@@ -61,6 +61,32 @@ def test_read_alignments_uses_real_zip_layout(tmp_path: Path) -> None:
     assert got["bbaf2n"][0].word == "bin"
 
 
+def _swapped_alignments(tmp_path: Path) -> Path:
+    # On Zenodo, 19 speakers' alignment folders carry another speaker's label
+    # (s5 <-> s6, s10 -> s13, s20 -> s21, ...); utterance ids are unique per speaker.
+    path = tmp_path / "alignments.zip"
+    with zipfile.ZipFile(path, "w") as zf:
+        for folder, utts in (("s5", ["pwij3p", "lgwk8a"]), ("s6", ["bbae8n", "sria5s"])):
+            for utt in utts:
+                zf.writestr(f"alignments/{folder}/{utt}.align", ALIGN)
+    return path
+
+
+def test_read_alignments_finds_a_mislabelled_folder_by_utterance_ids(tmp_path: Path) -> None:
+    got = read_alignments(_swapped_alignments(tmp_path), "s5", ["bbae8n", "sria5s"])
+    assert sorted(got) == ["bbae8n", "sria5s"]
+
+
+def test_read_alignments_prefers_the_speakers_own_folder(tmp_path: Path) -> None:
+    got = read_alignments(_swapped_alignments(tmp_path), "s6", ["bbae8n", "sria5s"])
+    assert sorted(got) == ["bbae8n", "sria5s"]
+
+
+def test_read_alignments_refuses_when_no_folder_matches_the_videos(tmp_path: Path) -> None:
+    with pytest.raises(LookupError, match="s7"):
+        read_alignments(_swapped_alignments(tmp_path), "s7", ["zzzz1a", "zzzz2a"])
+
+
 def test_complete_zips_checks_sizes_against_the_manifest(tmp_path: Path) -> None:
     raw = tmp_path / "raw"
     raw.mkdir()

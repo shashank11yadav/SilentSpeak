@@ -101,7 +101,7 @@ def prepare(data_dir: Path, cfg: Config, landmarks: Path | None = None) -> Segme
     for path in files:
         speaker = path.stem
         lm = SpeakerLandmarks.load(path)
-        alignments = read_alignments(align_zip, speaker)
+        alignments = read_alignments(align_zip, speaker, list(lm.utterances))
         feats = frames_features(lm.points, lm.blend, lm.matrix)
         for i, utt in enumerate(lm.utterances):
             if utt not in alignments:

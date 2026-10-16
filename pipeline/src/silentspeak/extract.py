@@ -227,10 +227,10 @@ def grid_clip_frames(data_dir: Path, speaker: str, word: str, context: int) -> C
     raw = raw_dir(data_dir)
     if speaker not in video_speakers(raw):
         raise FileNotFoundError(f"{speaker}.zip is missing or still downloading")
-    alignments = read_alignments(raw / "alignments.zip", speaker)
     landmarker = Landmarker(face_landmarker_model())
     try:
         with SpeakerVideo(raw / f"{speaker}.zip") as video:
+            alignments = read_alignments(raw / "alignments.zip", speaker, video.utterances)
             for utt in video.utterances:
                 hit = next((w for w in alignments.get(utt, []) if w.word == word), None)
                 if hit is None:
