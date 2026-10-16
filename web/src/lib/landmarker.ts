@@ -12,7 +12,7 @@ export interface Detection {
 
 export interface Tracker {
   detect(video: HTMLVideoElement, timestampMs: number): Detection;
-  readonly delegate: 'GPU' | 'CPU';
+  readonly delegate: Delegate;
   close(): void;
 }
 
@@ -65,30 +65,34 @@ export function toDetection(
   };
 }
 
-export async function createTracker(base: string): Promise<Tracker> {
+type Delegate = 'GPU' | 'CPU';
+
+async function loadFaceLandmarker(base: string, mode: 'VIDEO' | 'IMAGE', delegate: Delegate) {
   const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
   const origin = globalThis.location.origin;
   const fileset = await FilesetResolver.forVisionTasks(
     new URL(`${base}mediapipe/wasm`, origin).href,
   );
-  const make = (delegate: 'GPU' | 'CPU') =>
-    FaceLandmarker.createFromOptions(fileset, {
-      baseOptions: {
-        modelAssetPath: new URL(`${base}mediapipe/face_landmarker.task`, origin).href,
-        delegate,
-      },
-      runningMode: 'VIDEO',
-      numFaces: 2,
-      outputFaceBlendshapes: true,
-      outputFacialTransformationMatrixes: true,
-    });
-  let delegate: 'GPU' | 'CPU' = 'GPU';
-  let task: Awaited<ReturnType<typeof make>>;
+  return FaceLandmarker.createFromOptions(fileset, {
+    baseOptions: {
+      modelAssetPath: new URL(`${base}mediapipe/face_landmarker.task`, origin).href,
+      delegate,
+    },
+    runningMode: mode,
+    numFaces: 2,
+    outputFaceBlendshapes: true,
+    outputFacialTransformationMatrixes: true,
+  });
+}
+
+export async function createTracker(base: string): Promise<Tracker> {
+  let delegate: Delegate = 'GPU';
+  let task: Awaited<ReturnType<typeof loadFaceLandmarker>>;
   try {
-    task = await make('GPU');
+    task = await loadFaceLandmarker(base, 'VIDEO', 'GPU');
   } catch {
     delegate = 'CPU';
-    task = await make('CPU');
+    task = await loadFaceLandmarker(base, 'VIDEO', 'CPU');
   }
   let lastTs = -1;
   return {
@@ -105,6 +109,32 @@ export async function createTracker(base: string): Promise<Tracker> {
         video.videoWidth,
         video.videoHeight,
       );
+    },
+    close() {
+      task.close();
+    },
+  };
+}
+
+/**
+ * The same landmarker for still images, one frame at a time. Used by the
+ * real-frame parity test, which compares it with the Python landmarker.
+ */
+export async function createImageLandmarker(base: string, delegate: Delegate = 'CPU') {
+  const task = await loadFaceLandmarker(base, 'IMAGE', delegate);
+  return {
+    detect(image: ImageBitmap): { detection: Detection; rawMatrix: number[] | null } {
+      const r = task.detect(image);
+      return {
+        detection: toDetection(
+          r.faceLandmarks,
+          r.faceBlendshapes,
+          r.facialTransformationMatrixes,
+          image.width,
+          image.height,
+        ),
+        rawMatrix: r.facialTransformationMatrixes[0]?.data.slice() ?? null,
+      };
     },
     close() {
       task.close();

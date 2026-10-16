@@ -169,6 +169,28 @@ def export_fixtures(
     typer.echo(f"wrote {out}")
 
 
+@app.command("frame-fixture")
+def frame_fixture(
+    data_dir: DataDir = None,
+    speaker: Annotated[str, typer.Option(help="A held-out test speaker.")] = "s1",
+    utterance: Annotated[
+        str | None, typer.Option(help="Utterance id (default: the speaker's first).")
+    ] = None,
+    count: Annotated[int, typer.Option(min=2, max=20, help="How many frames to keep.")] = 10,
+    out_dir: Annotated[Path, typer.Option()] = FIXTURES_DIR,
+) -> None:
+    """Write real GRID frames and their Python landmarks for the browser parity test."""
+    from .paths import raw_dir
+    from .realframes import write_frame_fixture
+
+    _setup()
+    zip_path = raw_dir(_data(data_dir)) / f"{speaker}.zip"
+    if not zip_path.exists():
+        raise typer.BadParameter(f"{zip_path} not found")
+    path = write_frame_fixture(zip_path, speaker, out_dir, utterance, count)
+    typer.echo(f"wrote {path}")
+
+
 @app.command("replay-clips")
 def replay_clips(
     data_dir: DataDir = None,

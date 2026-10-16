@@ -37,14 +37,20 @@ GRID_FRAMES_PER_UTTERANCE = 75
 
 
 class Landmarker:
-    """MediaPipe FaceLandmarker in VIDEO mode, returning the stored subset."""
+    """MediaPipe FaceLandmarker returning the stored subset.
 
-    def __init__(self, model_path: Path) -> None:
+    VIDEO mode (the default) tracks the face from frame to frame, as extraction
+    does over an utterance; IMAGE mode treats every frame on its own, as the
+    real-frame parity fixture does.
+    """
+
+    def __init__(self, model_path: Path, video: bool = True) -> None:
         from mediapipe.tasks.python import BaseOptions, vision
 
+        self._video = video
         options = vision.FaceLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=str(model_path)),
-            running_mode=vision.RunningMode.VIDEO,
+            running_mode=vision.RunningMode.VIDEO if video else vision.RunningMode.IMAGE,
             num_faces=1,
             output_face_blendshapes=True,
             output_facial_transformation_matrixes=True,
@@ -61,14 +67,23 @@ class Landmarker:
         self._ts += UTTERANCE_GAP_MS
 
     def detect(self, rgb: NDArray[np.uint8]) -> tuple[F32, F32, F32]:
+        """Stored points in image-height units, blendshapes and the pose matrix."""
+        h, w = rgb.shape[:2]
+        pts, blend, matrix = self.detect_normalised(rgb)
+        return to_height_units(pts, w, h), blend, matrix
+
+    def detect_normalised(self, rgb: NDArray[np.uint8]) -> tuple[F32, F32, F32]:
+        """As ``detect``, with the points left in MediaPipe's normalised units."""
         import mediapipe as mediapipe_lib
 
-        h, w = rgb.shape[:2]
         image = mediapipe_lib.Image(
             image_format=mediapipe_lib.ImageFormat.SRGB, data=np.ascontiguousarray(rgb)
         )
-        self._ts += FRAME_MS
-        result = self._task.detect_for_video(image, self._ts)
+        if self._video:
+            self._ts += FRAME_MS
+            result = self._task.detect_for_video(image, self._ts)
+        else:
+            result = self._task.detect(image)
         if not result.face_landmarks:
             return (
                 np.full((N_STORED, 3), np.nan, np.float32),
@@ -85,7 +100,7 @@ class Landmarker:
             self._checked_names = True
         blend = np.array([c.score for c in cats], dtype=np.float32)
         matrix = np.asarray(result.facial_transformation_matrixes[0], dtype=np.float32)
-        return to_height_units(pts, w, h), blend, matrix.reshape(4, 4)
+        return pts, blend, matrix.reshape(4, 4)
 
 
 def extract_speaker(

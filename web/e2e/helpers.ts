@@ -1,10 +1,22 @@
 import { expect, type Page } from '@playwright/test';
 
 // Installed by src/lib/test-hook.ts in `--mode test` builds.
+export interface ImageFeatures {
+  width: number;
+  height: number;
+  faces: number;
+  normalised: number[] | null;
+  blend: number[] | null;
+  matrix: number[] | null;
+  features: number[];
+  featuresUnconverted: number[];
+}
+
 declare global {
   interface Window {
     __silentspeak?: {
       captureClip: (id: string, as?: 'camera' | 'replay', limit?: number) => Promise<void>;
+      imageFeatures: (urls: string[], delegate?: 'CPU' | 'GPU') => Promise<ImageFeatures[]>;
     };
   }
 }
