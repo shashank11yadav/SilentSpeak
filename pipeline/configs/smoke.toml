@@ -1,0 +1,56 @@
+# Tiny settings for `silentspeak smoke`: synthetic speakers, two epochs.
+# It proves the pipeline runs end to end; the numbers mean nothing.
+seed = 7
+
+[data]
+# Speaker s21 has no video in GRID; every other speaker not listed here trains.
+test_speakers = ["s1", "s2"]
+val_speakers = ["s3"]
+pad_frames = 2
+# One word per category is kept out of classifier training and used only to
+# measure few-shot learning of unseen words.
+fewshot_words = ["set", "white", "with", "k", "seven", "soon"]
+
+[model]
+hidden = 32
+conv_layers = 3
+conv_kernel = 5
+gru_layers = 2
+embedding_dim = 128
+dropout = 0.2
+logit_scale = 16.0
+
+[train]
+epochs = 2
+batch_size = 32
+lr = 2e-3
+weight_decay = 0.05
+warmup_epochs = 0
+label_smoothing = 0.1
+supcon_weight = 0.5
+supcon_temperature = 0.1
+patience = 2
+max_frames = 50
+min_frames = 5
+# Augmentation
+time_stretch = [0.8, 1.25]
+feature_noise = 0.02
+frame_drop = 0.05
+num_workers = 0
+
+[evaluate]
+# A category ships in "GRID words" only at or above this held-out top-1.
+category_gate = 0.40
+fewshot_shots = 5
+fewshot_episodes = 50
+# "Not sure" thresholds are calibrated on validation speakers so that answers
+# the app does give are right at least this often.
+target_precision = 0.75
+
+[replay]
+# Six held-out test-speaker words for the no-camera Replay mode, one per category.
+words = ["bin", "blue", "at", "f", "two", "now"]
+speakers = ["s1", "s2"]
+context_frames = 6
+crop_width = 120
+crop_height = 80
