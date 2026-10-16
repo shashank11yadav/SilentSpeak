@@ -50,7 +50,7 @@ export function GridWordsPanel({ categories, categoryId, onCategory, preview, re
                 />
                 <span className="block text-sm font-semibold">{CATEGORY_LABELS[c.id] ?? c.id}</span>
                 <span className="mt-0.5 flex items-center justify-between gap-2 text-xs text-ink-muted">
-                  <span>{c.words.length} words</span>
+                  <span className="whitespace-nowrap">{c.words.length} words</span>
                   <span className={c.top1 === null ? '' : 'font-semibold text-ink'}>
                     {c.top1 === null ? (preview ? 'untrained' : 'n/a') : pct(c.top1)}
                   </span>
