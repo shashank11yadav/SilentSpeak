@@ -82,7 +82,7 @@ test.describe('model load failure', () => {
     await expect(alert).toContainText('HTTP 404');
     await page.unroute('**/models/model.onnx');
     await alert.getByRole('button', { name: 'Retry' }).click();
-    await expect(page.getByTestId('backend')).toHaveText(/WebAssembly|WebGPU/, { timeout: 30_000 });
+    await expect(page.getByTestId('runtime')).toHaveText(/WebAssembly/, { timeout: 30_000 });
     await expect(alert).toBeHidden();
   });
 });

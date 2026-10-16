@@ -1,8 +1,9 @@
 /// <reference lib="webworker" />
-// Runs the ONNX lip-motion model off the main thread. WebGPU when the browser
-// has it, WebAssembly otherwise; operators WebGPU lacks (the GRU) run on the
-// CPU either way.
-import * as ort from 'onnxruntime-web';
+// Runs the ONNX lip-motion model off the main thread on ONNX Runtime's
+// WebAssembly backend. The WebGPU build is deliberately not used: the model is
+// small, its GRU has no WebGPU kernel and would run on the CPU anyway, and the
+// WebGPU runtime would add a 28 MB wasm file to every visit.
+import * as ort from 'onnxruntime-web/wasm';
 import type { WorkerRequest, WorkerResponse } from '../lib/model-protocol';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -13,37 +14,23 @@ function post(msg: WorkerResponse, transfer: Transferable[] = []) {
   self.postMessage(msg, transfer);
 }
 
-async function create(bytes: Uint8Array, providers: string[]) {
-  return ort.InferenceSession.create(bytes, {
-    executionProviders: providers,
-    graphOptimizationLevel: 'all',
-  });
-}
-
-async function load(modelUrl: string, allowWebGpu: boolean) {
+async function load(modelUrl: string) {
   ort.env.wasm.numThreads = 1; // GitHub Pages cannot enable cross-origin isolation
   const res = await fetch(modelUrl);
   if (!res.ok) throw new Error(`model download failed (HTTP ${res.status})`);
   const bytes = new Uint8Array(await res.arrayBuffer());
-  const hasGpu = allowWebGpu && 'gpu' in self.navigator;
-  if (hasGpu) {
-    try {
-      session = await create(bytes, ['webgpu']);
-      return 'webgpu' as const;
-    } catch {
-      // No usable adapter (or an unsupported driver): fall back to WebAssembly.
-    }
-  }
-  session = await create(bytes, ['wasm']);
-  return 'wasm' as const;
+  session = await ort.InferenceSession.create(bytes, {
+    executionProviders: ['wasm'],
+    graphOptimizationLevel: 'all',
+  });
 }
 
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const msg = event.data;
   if (msg.type === 'load') {
-    load(msg.modelUrl, msg.allowWebGpu).then(
-      (backend) => {
-        post({ type: 'loaded', backend });
+    load(msg.modelUrl).then(
+      () => {
+        post({ type: 'loaded' });
       },
       (err: unknown) => {
         post({

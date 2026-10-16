@@ -1,7 +1,6 @@
 import { Lock, ScanFace, Waves, Brain } from 'lucide-react';
 import type { ModelMeta } from '../ml/meta';
 import { GRID_URL, LIPNET_URL, MEDIAPIPE_URL, REPO_URL, RUN_LOCALLY_URL } from '../links';
-import type { Backend } from '../lib/model-protocol';
 
 const STEPS = [
   {
@@ -21,7 +20,7 @@ const STEPS = [
   },
 ];
 
-export function HowItWorks({ meta, backend }: { meta: ModelMeta | null; backend: Backend | null }) {
+export function HowItWorks({ meta, loaded }: { meta: ModelMeta | null; loaded: boolean }) {
   return (
     <section id="how-it-works" aria-labelledby="how-title" className="scroll-mt-20">
       <h2 id="how-title" className="text-xl font-semibold tracking-tight">
@@ -70,8 +69,8 @@ export function HowItWorks({ meta, backend }: { meta: ModelMeta | null; backend:
             <dt>Model</dt>
             <dd className="text-ink">{meta?.metrics ? 'trained on GRID' : 'untrained preview'}</dd>
             <dt>Runs on</dt>
-            <dd className="text-ink" data-testid="backend">
-              {backend === 'webgpu' ? 'WebGPU' : backend === 'wasm' ? 'WebAssembly' : 'loading…'}
+            <dd className="text-ink" data-testid="runtime">
+              {loaded ? 'WebAssembly, in a worker' : 'loading…'}
             </dd>
           </dl>
         </div>

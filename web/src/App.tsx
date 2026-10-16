@@ -26,7 +26,6 @@ import {
   type ModelMeta,
 } from './ml/meta';
 import { ModelClient } from './lib/model-client';
-import type { Backend } from './lib/model-protocol';
 import { commandFor } from './lib/remote';
 import { loadReplayClips, type ReplayClip } from './lib/replay';
 import { installTestHook } from './lib/test-hook';
@@ -37,7 +36,7 @@ const BASE = import.meta.env.BASE_URL;
 
 type ModelStatus =
   | { phase: 'loading' }
-  | { phase: 'ready'; meta: ModelMeta; labels: Labels; backend: Backend }
+  | { phase: 'ready'; meta: ModelMeta; labels: Labels }
   | { phase: 'error'; message: string };
 
 async function getJson(url: string): Promise<unknown> {
@@ -79,7 +78,7 @@ export function App() {
       getJson(`${BASE}models/labels.json`),
       client.load(BASE),
     ]).then(
-      ([metaJson, labelsJson, backend]) => {
+      ([metaJson, labelsJson]) => {
         if (cancelled) return;
         const meta = parseMeta(metaJson);
         const labels = parseLabels(labelsJson, meta);
@@ -87,7 +86,7 @@ export function App() {
         const first = availableCategories(meta, labels)[0];
         if (first && stateRef.current.categoryId === null)
           dispatch({ type: 'category', id: first.id });
-        setModel({ phase: 'ready', meta, labels, backend });
+        setModel({ phase: 'ready', meta, labels });
       },
       (err: unknown) => {
         if (cancelled) return;
@@ -371,7 +370,7 @@ export function App() {
         </div>
 
         <div className="mx-auto mt-8 max-w-6xl px-4">
-          <HowItWorks meta={ready?.meta ?? null} backend={ready?.backend ?? null} />
+          <HowItWorks meta={ready?.meta ?? null} loaded={ready !== null} />
         </div>
       </main>
       <SiteFooter gridCredit={gridCredit} />

@@ -27,9 +27,26 @@ function contentSecurityPolicy(): Plugin {
   };
 }
 
+/**
+ * Fails the build if a WebGPU (JSEP) build of ONNX Runtime sneaks back in, for
+ * example through a bare `onnxruntime-web` import. The app runs WebAssembly
+ * only, and the JSEP wasm alone is 28 MB.
+ */
+function wasmOnlyRuntime(): Plugin {
+  return {
+    name: 'silentspeak:wasm-only-runtime',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const extra = Object.keys(bundle).filter((f) => /jsep|jspi|webgpu|asyncify/i.test(f));
+      if (extra.length > 0)
+        this.error(`unexpected ONNX Runtime build in the bundle: ${extra.join(', ')}`);
+    },
+  };
+}
+
 export default defineConfig({
   base: BASE,
-  plugins: [react(), tailwindcss(), contentSecurityPolicy()],
+  plugins: [react(), tailwindcss(), contentSecurityPolicy(), wasmOnlyRuntime()],
   build: {
     target: 'es2022',
     sourcemap: false,

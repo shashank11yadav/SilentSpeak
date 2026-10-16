@@ -11,7 +11,7 @@ declare global {
 
 export async function ready(page: Page) {
   await page.goto('./');
-  await expect(page.getByTestId('backend')).not.toHaveText('loading…', { timeout: 30_000 });
+  await expect(page.getByTestId('runtime')).not.toHaveText('loading…', { timeout: 30_000 });
 }
 
 export async function captureClip(

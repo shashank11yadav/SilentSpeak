@@ -1,6 +1,6 @@
 // Main-thread handle on the model worker.
 import { FEATURE_DIM } from '../ml/features';
-import type { Backend, ModelOutput, WorkerRequest, WorkerResponse } from './model-protocol';
+import type { ModelOutput, WorkerRequest, WorkerResponse } from './model-protocol';
 
 export class ModelClient {
   private worker: Worker;
@@ -9,7 +9,7 @@ export class ModelClient {
     number,
     { resolve: (o: ModelOutput) => void; reject: (e: Error) => void }
   >();
-  private loading: { resolve: (b: Backend) => void; reject: (e: Error) => void } | null = null;
+  private loading: { resolve: () => void; reject: (e: Error) => void } | null = null;
 
   constructor() {
     this.worker = new Worker(new URL('../workers/model.worker.ts', import.meta.url), {
@@ -30,7 +30,7 @@ export class ModelClient {
 
   private receive(msg: WorkerResponse) {
     if (msg.type === 'loaded') {
-      this.loading?.resolve(msg.backend);
+      this.loading?.resolve();
       this.loading = null;
     } else if (msg.type === 'result') {
       this.pending.get(msg.id)?.resolve({ logits: msg.logits, embedding: msg.embedding });
@@ -48,14 +48,13 @@ export class ModelClient {
     this.worker.postMessage(msg, transfer);
   }
 
-  load(base: string): Promise<Backend> {
+  load(base: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.loading = { resolve, reject };
       const origin = globalThis.location.origin;
       this.send({
         type: 'load',
         modelUrl: new URL(`${base}models/model.onnx`, origin).href,
-        allowWebGpu: true,
       });
     });
   }
