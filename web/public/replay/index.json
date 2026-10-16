@@ -1,0 +1,114 @@
+{
+  "source": "synthetic",
+  "credit": null,
+  "clips": [
+    {
+      "id": "clip-1",
+      "word": "bin",
+      "category": "command",
+      "speaker": "synthetic",
+      "utterance": null,
+      "fps": 25,
+      "modelRange": [
+        4,
+        18
+      ],
+      "sprite": "clip-1.jpg",
+      "landmarks": "clip-1.json",
+      "frames": 22,
+      "columns": 8,
+      "frameWidth": 120,
+      "frameHeight": 80
+    },
+    {
+      "id": "clip-2",
+      "word": "blue",
+      "category": "colour",
+      "speaker": "synthetic",
+      "utterance": null,
+      "fps": 25,
+      "modelRange": [
+        4,
+        18
+      ],
+      "sprite": "clip-2.jpg",
+      "landmarks": "clip-2.json",
+      "frames": 22,
+      "columns": 8,
+      "frameWidth": 120,
+      "frameHeight": 80
+    },
+    {
+      "id": "clip-3",
+      "word": "at",
+      "category": "preposition",
+      "speaker": "synthetic",
+      "utterance": null,
+      "fps": 25,
+      "modelRange": [
+        4,
+        18
+      ],
+      "sprite": "clip-3.jpg",
+      "landmarks": "clip-3.json",
+      "frames": 22,
+      "columns": 8,
+      "frameWidth": 120,
+      "frameHeight": 80
+    },
+    {
+      "id": "clip-4",
+      "word": "f",
+      "category": "letter",
+      "speaker": "synthetic",
+      "utterance": null,
+      "fps": 25,
+      "modelRange": [
+        4,
+        18
+      ],
+      "sprite": "clip-4.jpg",
+      "landmarks": "clip-4.json",
+      "frames": 22,
+      "columns": 8,
+      "frameWidth": 120,
+      "frameHeight": 80
+    },
+    {
+      "id": "clip-5",
+      "word": "two",
+      "category": "digit",
+      "speaker": "synthetic",
+      "utterance": null,
+      "fps": 25,
+      "modelRange": [
+        4,
+        18
+      ],
+      "sprite": "clip-5.jpg",
+      "landmarks": "clip-5.json",
+      "frames": 22,
+      "columns": 8,
+      "frameWidth": 120,
+      "frameHeight": 80
+    },
+    {
+      "id": "clip-6",
+      "word": "now",
+      "category": "adverb",
+      "speaker": "synthetic",
+      "utterance": null,
+      "fps": 25,
+      "modelRange": [
+        4,
+        18
+      ],
+      "sprite": "clip-6.jpg",
+      "landmarks": "clip-6.json",
+      "frames": 22,
+      "columns": 8,
+      "frameWidth": 120,
+      "frameHeight": 80
+    }
+  ]
+}

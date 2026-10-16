@@ -1,0 +1,164 @@
+{
+  "classes": [
+    "bin",
+    "lay",
+    "place",
+    "blue",
+    "green",
+    "red",
+    "at",
+    "by",
+    "in",
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
+    "z",
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "eight",
+    "nine",
+    "again",
+    "now",
+    "please"
+  ],
+  "categories": [
+    {
+      "id": "command",
+      "words": [
+        "bin",
+        "lay",
+        "place"
+      ],
+      "shipped": false,
+      "top1": null,
+      "top3": null,
+      "chance1": 0.3333333333333333,
+      "threshold": 0.5
+    },
+    {
+      "id": "colour",
+      "words": [
+        "blue",
+        "green",
+        "red"
+      ],
+      "shipped": false,
+      "top1": null,
+      "top3": null,
+      "chance1": 0.3333333333333333,
+      "threshold": 0.5
+    },
+    {
+      "id": "preposition",
+      "words": [
+        "at",
+        "by",
+        "in"
+      ],
+      "shipped": false,
+      "top1": null,
+      "top3": null,
+      "chance1": 0.3333333333333333,
+      "threshold": 0.5
+    },
+    {
+      "id": "letter",
+      "words": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "x",
+        "y",
+        "z"
+      ],
+      "shipped": false,
+      "top1": null,
+      "top3": null,
+      "chance1": 0.041666666666666664,
+      "threshold": 0.5
+    },
+    {
+      "id": "digit",
+      "words": [
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "eight",
+        "nine"
+      ],
+      "shipped": false,
+      "top1": null,
+      "top3": null,
+      "chance1": 0.1111111111111111,
+      "threshold": 0.5
+    },
+    {
+      "id": "adverb",
+      "words": [
+        "again",
+        "now",
+        "please"
+      ],
+      "shipped": false,
+      "top1": null,
+      "top3": null,
+      "chance1": 0.3333333333333333,
+      "threshold": 0.5
+    }
+  ],
+  "fewshotWords": [
+    "set",
+    "white",
+    "with",
+    "k",
+    "seven",
+    "soon"
+  ]
+}
