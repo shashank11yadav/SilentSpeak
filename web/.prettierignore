@@ -1,0 +1,8 @@
+dist
+dist-test
+public/models
+public/replay
+public/mediapipe
+playwright-report
+test-results
+package-lock.json

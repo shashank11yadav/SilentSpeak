@@ -38,7 +38,6 @@ web/playwright/.cache/
 coverage/
 # Copied from node_modules or downloaded with a pinned hash at build time
 web/public/mediapipe/
-web/public/ort/
 
 # Editors and OS
 .DS_Store
