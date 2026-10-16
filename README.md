@@ -179,13 +179,23 @@ once its size matches.
 ```sh
 cd pipeline
 uv sync
-uv run silentspeak extract --workers 6    # one landmarks/sN.npz per speaker, resumable
+uv run silentspeak extract --workers 6    # landmarks/sN.npz per speaker, resumable
 uv run silentspeak prepare                # word segments -> prepared/segments.npz
-uv run silentspeak train                  # MPS when available; runs/default/best.pt
+uv run silentspeak train                  # MPS when available -> runs/default/best.pt
 uv run silentspeak evaluate               # reports/metrics.json and metrics.md
 uv run silentspeak export                 # web/public/models/
 uv run silentspeak replay-clips           # web/public/replay/ from held-out speakers
 ```
+
+Rough runtimes on an Apple M4 (10 cores, 16 GB):
+
+| Step | Time | Notes |
+|---|---|---|
+| extract | 30-45 min with 6 workers | about 3.4 ms per frame per worker (decode plus landmarks), 2.5 M frames |
+| prepare | 2-5 min | |
+| train | 30-60 min | about 95 ms per batch of 256 on MPS, early stopping on validation |
+| evaluate | 1-3 min | |
+| export, replay-clips | under 1 min | |
 
 Every command reads `configs/default.toml` (fixed seed, speaker split,
 few-shot words, model and training settings).
