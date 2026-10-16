@@ -1,0 +1,49 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Datasets, caches and checkpoints (the pipeline recreates them)
+_datasets/
+pipeline/runs/
+pipeline/.cache/
+*.zip
+*.pt
+*.npz
+*.npy
+*.mpg
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+
+# Node / web
+node_modules/
+web/dist/
+web/dist-test/
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/playwright/.cache/
+*.tsbuildinfo
+.vite/
+coverage/
+# Copied from node_modules or downloaded with a pinned hash at build time
+web/public/mediapipe/
+web/public/ort/
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
