@@ -220,9 +220,19 @@ def collate(
     return padded, lengths, labels
 
 
+STATS_SAMPLE: Final[int] = 20_000
+
+
 def feature_stats(segments: Segments, cfg: Config) -> tuple[torch.Tensor, torch.Tensor]:
-    """Per-dimension mean and std of model inputs over present training frames."""
-    seqs = [sequence_features(segments.get(i)) for i in range(len(segments))]
+    """Per-dimension mean and std of model inputs over present training frames.
+
+    Estimated from a fixed random sample of segments, which is plenty for 157
+    means and deviations and keeps memory flat on the full corpus.
+    """
+    rng = np.random.default_rng(cfg.seed)
+    n = len(segments)
+    pick = rng.choice(n, size=STATS_SAMPLE, replace=False) if n > STATS_SAMPLE else range(n)
+    seqs = [sequence_features(segments.get(int(i))) for i in pick]
     allf = np.concatenate(seqs) if seqs else np.zeros((1, 2 * FRAME_DIM - 1), np.float32)
     present = allf[:, PRESENCE] == 1.0
     sel = allf[present] if present.any() else allf
