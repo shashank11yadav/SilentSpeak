@@ -1,21 +1,21 @@
 {
-  "source": "synthetic",
-  "credit": null,
+  "source": "grid",
+  "credit": "GRID corpus, Cooke et al., CC BY 4.0",
   "clips": [
     {
       "id": "clip-1",
       "word": "bin",
       "category": "command",
-      "speaker": "synthetic",
-      "utterance": null,
+      "speaker": "s1",
+      "utterance": "bbaf2n",
       "fps": 25,
       "modelRange": [
         4,
-        18
+        15
       ],
       "sprite": "clip-1.jpg",
       "landmarks": "clip-1.json",
-      "frames": 22,
+      "frames": 19,
       "columns": 8,
       "frameWidth": 120,
       "frameHeight": 80
@@ -24,16 +24,16 @@
       "id": "clip-2",
       "word": "blue",
       "category": "colour",
-      "speaker": "synthetic",
-      "utterance": null,
+      "speaker": "s2",
+      "utterance": "bbaf1n",
       "fps": 25,
       "modelRange": [
         4,
-        18
+        14
       ],
       "sprite": "clip-2.jpg",
       "landmarks": "clip-2.json",
-      "frames": 22,
+      "frames": 18,
       "columns": 8,
       "frameWidth": 120,
       "frameHeight": 80
@@ -42,16 +42,16 @@
       "id": "clip-3",
       "word": "at",
       "category": "preposition",
-      "speaker": "synthetic",
-      "utterance": null,
+      "speaker": "s20",
+      "utterance": "bbad3n",
       "fps": 25,
       "modelRange": [
         4,
-        18
+        12
       ],
       "sprite": "clip-3.jpg",
       "landmarks": "clip-3.json",
-      "frames": 22,
+      "frames": 16,
       "columns": 8,
       "frameWidth": 120,
       "frameHeight": 80
@@ -60,16 +60,16 @@
       "id": "clip-4",
       "word": "f",
       "category": "letter",
-      "speaker": "synthetic",
-      "utterance": null,
+      "speaker": "s22",
+      "utterance": "bgaf1p",
       "fps": 25,
       "modelRange": [
         4,
-        18
+        15
       ],
       "sprite": "clip-4.jpg",
       "landmarks": "clip-4.json",
-      "frames": 22,
+      "frames": 19,
       "columns": 8,
       "frameWidth": 120,
       "frameHeight": 80
@@ -78,16 +78,16 @@
       "id": "clip-5",
       "word": "two",
       "category": "digit",
-      "speaker": "synthetic",
-      "utterance": null,
+      "speaker": "s34",
+      "utterance": "bbac2a",
       "fps": 25,
       "modelRange": [
         4,
-        18
+        16
       ],
       "sprite": "clip-5.jpg",
       "landmarks": "clip-5.json",
-      "frames": 22,
+      "frames": 20,
       "columns": 8,
       "frameWidth": 120,
       "frameHeight": 80
@@ -96,16 +96,16 @@
       "id": "clip-6",
       "word": "now",
       "category": "adverb",
-      "speaker": "synthetic",
-      "utterance": null,
+      "speaker": "s1",
+      "utterance": "bbaf2n",
       "fps": 25,
       "modelRange": [
         4,
-        18
+        14
       ],
       "sprite": "clip-6.jpg",
       "landmarks": "clip-6.json",
-      "frames": 22,
+      "frames": 18,
       "columns": 8,
       "frameWidth": 120,
       "frameHeight": 80

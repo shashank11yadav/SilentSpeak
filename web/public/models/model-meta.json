@@ -59,11 +59,29 @@
     "now",
     "please"
   ],
-  "trainedOn": null,
-  "metrics": null,
-  "thresholds": {
-    "protoMargin": 0.03,
-    "protoMinSimilarity": 0.0
+  "trainedOn": "GRID corpus (Cooke et al., CC BY 4.0): 25 training speakers, 3 validation speakers; tested on held-out speakers s1, s2, s20, s22, s34",
+  "metrics": {
+    "overallTop1": 0.45912156604704724,
+    "fewshotAccuracy": 0.7889,
+    "fewshotWords": [
+      "set",
+      "white",
+      "with",
+      "k",
+      "seven",
+      "soon"
+    ],
+    "testSpeakers": [
+      "s1",
+      "s2",
+      "s20",
+      "s22",
+      "s34"
+    ]
   },
-  "modelSha256": "f660604fa65dd3d107f295e8b61c3641a1c157c9767d230cb9e02efefbcdb7aa"
+  "thresholds": {
+    "protoMargin": 5.602836608886719e-06,
+    "protoMinSimilarity": 0.7511651277542114
+  },
+  "modelSha256": "2a1977a0496f913f9d1abce8e26dd6d08bd6b1857477fc5075b42f9c959db88f"
 }

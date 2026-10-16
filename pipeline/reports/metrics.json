@@ -1,0 +1,368 @@
+{
+  "featureVersion": 1,
+  "seed": 1234,
+  "speakers": {
+    "train": [
+      "s5",
+      "s6",
+      "s7",
+      "s8",
+      "s9",
+      "s10",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s16",
+      "s17",
+      "s18",
+      "s19",
+      "s24",
+      "s25",
+      "s26",
+      "s27",
+      "s28",
+      "s29",
+      "s30",
+      "s31",
+      "s32",
+      "s33"
+    ],
+    "val": [
+      "s3",
+      "s4",
+      "s23"
+    ],
+    "test": [
+      "s1",
+      "s2",
+      "s20",
+      "s22",
+      "s34"
+    ]
+  },
+  "segments": {
+    "train": 121023,
+    "val": 17999,
+    "test": 29997
+  },
+  "gate": 0.4,
+  "targetPrecision": 0.75,
+  "categories": [
+    {
+      "id": "command",
+      "words": [
+        "bin",
+        "lay",
+        "place"
+      ],
+      "n": 3759,
+      "top1": 0.8488959829741952,
+      "top3": 1.0,
+      "chance1": 0.3333333333333333,
+      "chance3": 1.0,
+      "threshold": 0.4079546332359314,
+      "precisionAtThreshold": 0.8535014757177355,
+      "coverageAtThreshold": 0.991487097632349,
+      "shipped": true,
+      "confusions": [
+        {
+          "true": "bin",
+          "predicted": "place",
+          "count": 286
+        },
+        {
+          "true": "lay",
+          "predicted": "place",
+          "count": 96
+        },
+        {
+          "true": "place",
+          "predicted": "lay",
+          "count": 63
+        },
+        {
+          "true": "place",
+          "predicted": "bin",
+          "count": 49
+        },
+        {
+          "true": "bin",
+          "predicted": "lay",
+          "count": 40
+        }
+      ]
+    },
+    {
+      "id": "colour",
+      "words": [
+        "blue",
+        "green",
+        "red"
+      ],
+      "n": 3749,
+      "top1": 0.7562016537743398,
+      "top3": 1.0,
+      "chance1": 0.3333333333333333,
+      "chance3": 1.0,
+      "threshold": 0.34129583835601807,
+      "precisionAtThreshold": 0.7562016537743398,
+      "coverageAtThreshold": 1.0,
+      "shipped": true,
+      "confusions": [
+        {
+          "true": "red",
+          "predicted": "green",
+          "count": 475
+        },
+        {
+          "true": "blue",
+          "predicted": "green",
+          "count": 137
+        },
+        {
+          "true": "red",
+          "predicted": "blue",
+          "count": 106
+        },
+        {
+          "true": "green",
+          "predicted": "red",
+          "count": 102
+        },
+        {
+          "true": "green",
+          "predicted": "blue",
+          "count": 53
+        }
+      ]
+    },
+    {
+      "id": "preposition",
+      "words": [
+        "at",
+        "by",
+        "in"
+      ],
+      "n": 3758,
+      "top1": 0.6487493347525279,
+      "top3": 1.0,
+      "chance1": 0.3333333333333333,
+      "chance3": 1.0,
+      "threshold": 0.5314366817474365,
+      "precisionAtThreshold": 0.6755934266585514,
+      "coverageAtThreshold": 0.8744012772751464,
+      "shipped": true,
+      "confusions": [
+        {
+          "true": "at",
+          "predicted": "in",
+          "count": 815
+        },
+        {
+          "true": "in",
+          "predicted": "at",
+          "count": 277
+        },
+        {
+          "true": "in",
+          "predicted": "by",
+          "count": 80
+        },
+        {
+          "true": "by",
+          "predicted": "at",
+          "count": 57
+        },
+        {
+          "true": "by",
+          "predicted": "in",
+          "count": 47
+        }
+      ]
+    },
+    {
+      "id": "letter",
+      "words": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "x",
+        "y",
+        "z"
+      ],
+      "n": 4800,
+      "top1": 0.336875,
+      "top3": 0.638125,
+      "chance1": 0.041666666666666664,
+      "chance3": 0.125,
+      "threshold": 0.5413289070129395,
+      "precisionAtThreshold": 0.7076124567474048,
+      "coverageAtThreshold": 0.12041666666666667,
+      "shipped": false,
+      "confusions": [
+        {
+          "true": "t",
+          "predicted": "c",
+          "count": 117
+        },
+        {
+          "true": "d",
+          "predicted": "c",
+          "count": 116
+        },
+        {
+          "true": "u",
+          "predicted": "q",
+          "count": 110
+        },
+        {
+          "true": "b",
+          "predicted": "p",
+          "count": 109
+        },
+        {
+          "true": "z",
+          "predicted": "c",
+          "count": 86
+        }
+      ]
+    },
+    {
+      "id": "digit",
+      "words": [
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "eight",
+        "nine"
+      ],
+      "n": 4500,
+      "top1": 0.6444444444444445,
+      "top3": 0.8633333333333333,
+      "chance1": 0.1111111111111111,
+      "chance3": 0.3333333333333333,
+      "threshold": 0.35755831003189087,
+      "precisionAtThreshold": 0.6658000472701489,
+      "coverageAtThreshold": 0.9402222222222222,
+      "shipped": true,
+      "confusions": [
+        {
+          "true": "four",
+          "predicted": "three",
+          "count": 99
+        },
+        {
+          "true": "nine",
+          "predicted": "six",
+          "count": 94
+        },
+        {
+          "true": "five",
+          "predicted": "six",
+          "count": 88
+        },
+        {
+          "true": "eight",
+          "predicted": "nine",
+          "count": 83
+        },
+        {
+          "true": "zero",
+          "predicted": "six",
+          "count": 81
+        }
+      ]
+    },
+    {
+      "id": "adverb",
+      "words": [
+        "again",
+        "now",
+        "please"
+      ],
+      "n": 3750,
+      "top1": 0.7506666666666667,
+      "top3": 1.0,
+      "chance1": 0.3333333333333333,
+      "chance3": 1.0,
+      "threshold": 0.3724087178707123,
+      "precisionAtThreshold": 0.7514033680834001,
+      "coverageAtThreshold": 0.9976,
+      "shipped": true,
+      "confusions": [
+        {
+          "true": "again",
+          "predicted": "now",
+          "count": 296
+        },
+        {
+          "true": "again",
+          "predicted": "please",
+          "count": 240
+        },
+        {
+          "true": "now",
+          "predicted": "again",
+          "count": 163
+        },
+        {
+          "true": "now",
+          "predicted": "please",
+          "count": 136
+        },
+        {
+          "true": "please",
+          "predicted": "again",
+          "count": 99
+        }
+      ]
+    }
+  ],
+  "overall": {
+    "top1": 0.45912156604704724,
+    "top5": 0.8065060042770192,
+    "n": 24316
+  },
+  "fewshot": {
+    "words": [
+      "set",
+      "white",
+      "with",
+      "k",
+      "seven",
+      "soon"
+    ],
+    "shots": 5,
+    "episodes": 1000,
+    "accuracy": 0.7889,
+    "chance": 0.16666666666666666,
+    "margin": 5.602836608886719e-06,
+    "minSimilarity": 0.7511651277542114,
+    "precisionAtThreshold": 0.813987766231852,
+    "coverageAtThreshold": 0.9046
+  }
+}

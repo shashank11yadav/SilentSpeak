@@ -54,11 +54,11 @@
         "lay",
         "place"
       ],
-      "shipped": false,
-      "top1": null,
-      "top3": null,
+      "shipped": true,
+      "top1": 0.8488959829741952,
+      "top3": 1.0,
       "chance1": 0.3333333333333333,
-      "threshold": 0.5
+      "threshold": 0.4079546332359314
     },
     {
       "id": "colour",
@@ -67,11 +67,11 @@
         "green",
         "red"
       ],
-      "shipped": false,
-      "top1": null,
-      "top3": null,
+      "shipped": true,
+      "top1": 0.7562016537743398,
+      "top3": 1.0,
       "chance1": 0.3333333333333333,
-      "threshold": 0.5
+      "threshold": 0.34129583835601807
     },
     {
       "id": "preposition",
@@ -80,11 +80,11 @@
         "by",
         "in"
       ],
-      "shipped": false,
-      "top1": null,
-      "top3": null,
+      "shipped": true,
+      "top1": 0.6487493347525279,
+      "top3": 1.0,
       "chance1": 0.3333333333333333,
-      "threshold": 0.5
+      "threshold": 0.5314366817474365
     },
     {
       "id": "letter",
@@ -115,10 +115,10 @@
         "z"
       ],
       "shipped": false,
-      "top1": null,
-      "top3": null,
+      "top1": 0.336875,
+      "top3": 0.638125,
       "chance1": 0.041666666666666664,
-      "threshold": 0.5
+      "threshold": 0.5413289070129395
     },
     {
       "id": "digit",
@@ -133,11 +133,11 @@
         "eight",
         "nine"
       ],
-      "shipped": false,
-      "top1": null,
-      "top3": null,
+      "shipped": true,
+      "top1": 0.6444444444444445,
+      "top3": 0.8633333333333333,
       "chance1": 0.1111111111111111,
-      "threshold": 0.5
+      "threshold": 0.35755831003189087
     },
     {
       "id": "adverb",
@@ -146,11 +146,11 @@
         "now",
         "please"
       ],
-      "shipped": false,
-      "top1": null,
-      "top3": null,
+      "shipped": true,
+      "top1": 0.7506666666666667,
+      "top3": 1.0,
       "chance1": 0.3333333333333333,
-      "threshold": 0.5
+      "threshold": 0.3724087178707123
     }
   ],
   "fewshotWords": [
