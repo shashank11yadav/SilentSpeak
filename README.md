@@ -76,7 +76,7 @@ version on a shared fixture to 1e-4:
 
 ```mermaid
 flowchart LR
-  zips["GRID zips<br/>(JPEG frames, alignments)"] --> extract["extract<br/>MediaPipe over every frame"]
+  zips["GRID zips<br/>(MPEG-1 video, alignments)"] --> extract["extract<br/>MediaPipe over every frame"]
   extract --> npz[("landmarks/sN.npz")]
   npz --> prepare["prepare<br/>cut aligned words, +-2 frames"]
   prepare --> train["train<br/>conv + BiGRU encoder<br/>cross-entropy + SupCon"]

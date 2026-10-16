@@ -7,7 +7,7 @@ Layout, checked against the real files:
   ``start end token``; times are in ticks of 1/25 000 s, so a 3 s utterance
   ends at 74 500 and one video frame (25 fps) is 1000 ticks. ``sil`` and ``sp``
   mark silence and short pauses.
-* ``sN.zip`` holds the speaker's video; see ``video.py``.
+* ``sN.zip`` holds the speaker's 1000 videos (``sN/<utterance>.mpg``); see ``video.py``.
 * ``manifest.tsv`` next to ``raw/`` lists ``key, md5, size, url`` for every
   file. A zip is only read once its size matches, so a download in progress is
   never opened.
