@@ -1,0 +1,174 @@
+@import 'tailwindcss' source(none);
+@source "./";
+
+/* Colour tokens. Every text/background pair used in the app meets WCAG AA. */
+:root {
+  --paper: #f7f5f0;
+  --surface: #ffffff;
+  --surface-muted: #efece5;
+  --ink: #1b1a17;
+  --ink-muted: #57534e;
+  --line: #ddd8ce;
+  --accent: #a3204f;
+  --accent-strong: #861940;
+  --accent-ink: #ffffff;
+  --accent-soft: #f8e4ea;
+  --ok: #19613f;
+  --ok-soft: #e1f2e8;
+  --warn: #8a4b00;
+  --warn-soft: #fbefd9;
+  --danger: #a1261b;
+  --danger-soft: #fbe9e7;
+  --stage: #121113;
+  --focus: #1d4ed8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #141413;
+    --surface: #1d1c1a;
+    --surface-muted: #272522;
+    --ink: #eeebe4;
+    --ink-muted: #b4aea4;
+    --line: #38352f;
+    --accent: #f27aa0;
+    --accent-strong: #f597b5;
+    --accent-ink: #2a0a16;
+    --accent-soft: #3a1a25;
+    --ok: #7fd6a6;
+    --ok-soft: #15301f;
+    --warn: #f3bf6b;
+    --warn-soft: #33260f;
+    --danger: #f19387;
+    --danger-soft: #3b1d19;
+    --stage: #0b0a0c;
+    --focus: #93b4ff;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-stage: var(--stage);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 50;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  padding: 0.5rem 0.75rem;
+  color: var(--ink);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 15%);
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 4%),
+    0 8px 24px rgb(0 0 0 / 4%);
+}
+
+/* The selfie view: video and overlay are mirrored together. */
+.mirror {
+  transform: scaleX(-1);
+}
+
+.scene-progress {
+  transform-origin: left center;
+  animation: scene-progress 6s linear infinite;
+  animation-play-state: paused;
+}
+
+.scene-progress[data-playing='true'] {
+  animation-play-state: running;
+}
+
+@keyframes scene-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.pulse {
+  animation: pulse 0.6s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  40% {
+    transform: scale(1.015);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 18px transparent;
+  }
+}
+
+.rec-dot {
+  animation: rec 1s ease-in-out infinite;
+}
+
+@keyframes rec {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-progress,
+  .pulse,
+  .rec-dot {
+    animation: none;
+  }
+}
