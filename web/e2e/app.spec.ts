@@ -120,7 +120,10 @@ test.describe('replay', () => {
 test.describe('GRID words', () => {
   test('a capture gives three guesses within the chosen category', async ({ page }) => {
     await ready(page);
-    await page.getByText('Digits').click();
+    await page
+      .locator('label')
+      .filter({ hasText: /^Digits/ })
+      .click();
     await captureClip(page, 'clip-5');
     const result = page.getByTestId('grid-result');
     await expect(result.getByRole('listitem')).toHaveCount(3);

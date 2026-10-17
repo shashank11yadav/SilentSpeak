@@ -266,9 +266,9 @@ export function App() {
               Mouth a word without a sound. Watch it get read from your lips.
             </h1>
             <p className="mt-3 text-base leading-relaxed text-pretty text-ink-muted sm:text-lg">
-              Face landmarks and a small lip-motion model run entirely in your browser. Try the
-              51-word GRID vocabulary, teach it your own words in a minute, or drive a player with
-              no hands and no voice.
+              Face landmarks and a small lip-motion model run entirely in your browser. Try GRID’s
+              commands, colours and digits, teach it your own words in a minute, or drive a player
+              with no hands and no voice.
             </p>
           </div>
 

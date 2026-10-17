@@ -272,8 +272,8 @@ On an Apple M4 (10 cores, 16 GB), for the full corpus:
   trained words; 78.9% 6-way 5-shot on words never trained on. See
   [Results](#results).
 - **Limitations:**
-  - GRID is a fixed-grammar studio corpus. "GRID words" knows 51 words and
-    nothing else, and accuracy on a webcam in a living room will be lower
+  - GRID is a fixed-grammar studio corpus. "GRID words" knows the 21 GRID words in
+    categories that pass the accuracy bar and nothing else, and accuracy on a webcam in a living room will be lower
     than the held-out studio figures.
   - Speaker-independent accuracy is modest: letters miss the bar entirely,
     and even shipped categories are wrong one time in four or five. The
