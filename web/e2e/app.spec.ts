@@ -3,14 +3,31 @@ import { expect, test } from '@playwright/test';
 import { captureClip, failCamera, ready } from './helpers';
 
 test.describe('first load', () => {
-  test('shows the untrained preview notice and opens on GRID words', async ({ page }) => {
+  test('runs the trained model and offers only the categories that ship', async ({ page }) => {
     await ready(page);
-    await expect(page.getByText('Untrained preview model.')).toBeVisible();
+    await expect(page.getByText('Untrained preview model.')).toHaveCount(0);
     await expect(page.getByRole('tab', { name: 'GRID words' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
+    const categories = page.getByRole('group', { name: 'Pick what kind of word you will say' });
+    for (const name of ['Commands', 'Colours', 'Prepositions', 'Digits', 'Adverbs']) {
+      await expect(categories.getByText(name, { exact: true })).toBeVisible();
+    }
+    await expect(categories.getByText('Letters', { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('hidden-category')).toContainText(
+      'Letters hidden: 34% on new speakers, under the 40% bar',
+    );
     await expect(page.getByText('GRID corpus, Cooke et al., CC BY 4.0')).toBeVisible();
+    await page.getByRole('tab', { name: 'Teach words' }).click();
+    await expect(page.getByTestId('fewshot')).toContainText('79% of the time (chance 17%)');
+  });
+
+  test('Replay offers no clip from a hidden category', async ({ page }) => {
+    await ready(page);
+    await page.getByRole('radio', { name: 'Replay' }).click();
+    await expect(page.getByRole('radio', { name: /blue/ })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Letters/ })).toHaveCount(0);
   });
 
   test('ships a strict CSP and makes no third-party requests', async ({ page }) => {
@@ -120,19 +137,11 @@ test.describe('GRID words', () => {
 
 test.describe('teach your own words and the silent remote', () => {
   test('quick setup, recognition and remote control', async ({ page }) => {
-    // The untrained stub embeds every clip almost alike, so loosen its "not
-    // sure" margin; the flow, not the stub's accuracy, is under test.
-    await page.route('**/models/model-meta.json', async (route) => {
-      const res = await route.fetch();
-      const meta = (await res.json()) as { thresholds: Record<string, number> };
-      meta.thresholds = { protoMargin: 1e-6, protoMinSimilarity: 0 };
-      await route.fulfill({ response: res, json: meta });
-    });
     await ready(page);
     await page.getByRole('tab', { name: 'Teach words' }).click();
     await page.getByRole('button', { name: /Start quick setup/ }).click();
     await expect(page.getByTestId('setup')).toContainText('take 1 of 9');
-    const clipFor: Record<string, string> = { play: 'clip-1', pause: 'clip-2', next: 'clip-4' };
+    const clipFor: Record<string, string> = { play: 'clip-1', pause: 'clip-2', next: 'clip-6' };
     for (const word of ['play', 'pause', 'next']) {
       for (let take = 0; take < 3; take++) {
         await expect(page.getByTestId('setup')).toContainText(word);
@@ -146,13 +155,13 @@ test.describe('teach your own words and the silent remote', () => {
     await expect(page.getByTestId('setup')).toBeHidden();
     await expect(page.getByText('3 takes')).toHaveCount(3);
 
-    await captureClip(page, 'clip-4');
+    await captureClip(page, 'clip-6');
     await expect(page.getByTestId('teach-result')).toContainText(/You said\s*next/);
 
     await page.getByRole('tab', { name: 'Silent remote' }).click();
     await expect(page.getByLabel('Next', { exact: true })).toHaveValue('next');
     const title = await page.getByTestId('scene-title').textContent();
-    await captureClip(page, 'clip-4');
+    await captureClip(page, 'clip-6');
     await expect(page.getByTestId('remote-result')).toContainText('Next');
     await expect(page.getByTestId('scene-title')).not.toHaveText(title ?? '');
 

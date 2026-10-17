@@ -217,6 +217,15 @@ export function App() {
 
   const preview = ready ? isPreview(ready.meta) : false;
   const categories = ready ? availableCategories(ready.meta, ready.labels) : [];
+  const hiddenCategories =
+    ready && !preview ? ready.labels.categories.filter((c) => !c.shipped) : [];
+  // A clip from a hidden category (letters) would be scored against the wrong
+  // words, so Replay offers only clips whose category ships.
+  const offeredClips = (() => {
+    if (!clips || !ready) return clips;
+    const kept = clips.filter((c) => categories.some((k) => k.id === c.category));
+    return kept.length > 0 ? kept : clips;
+  })();
   const prompt = !ready
     ? 'Loading the lip-reading model…'
     : source === 'replay'
@@ -296,7 +305,7 @@ export function App() {
                 setMessage(null);
                 setSource(s);
               }}
-              clips={clips}
+              clips={offeredClips}
               clipsError={clipsError}
               selectedClip={selectedClip}
               onSelectClip={setSelectedClip}
@@ -321,6 +330,7 @@ export function App() {
                 ) : state.mode === 'grid' ? (
                   <GridWordsPanel
                     categories={categories}
+                    hidden={hiddenCategories}
                     categoryId={state.categoryId}
                     onCategory={(id) => {
                       dispatch({ type: 'category', id });
@@ -334,6 +344,14 @@ export function App() {
                     setup={state.setup}
                     match={state.teach}
                     persistent={persistent}
+                    fewshot={
+                      ready.meta.metrics && ready.meta.metrics.fewshotWords.length > 0
+                        ? {
+                            accuracy: ready.meta.metrics.fewshotAccuracy,
+                            words: ready.meta.metrics.fewshotWords.length,
+                          }
+                        : null
+                    }
                     onStartSetup={(labels, takesPerWord) => {
                       dispatch({ type: 'start-setup', labels, takesPerWord });
                     }}

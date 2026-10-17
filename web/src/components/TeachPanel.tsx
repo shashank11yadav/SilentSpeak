@@ -11,6 +11,8 @@ interface Props {
   setup: Setup | null;
   match: PrototypeMatch | null;
   persistent: boolean;
+  /** Held-out few-shot accuracy on words the model never trained on. */
+  fewshot: { accuracy: number; words: number } | null;
   onStartSetup: (labels: string[], takesPerWord: number) => void;
   onCancelSetup: () => void;
   onDelete: (label: string) => void;
@@ -24,7 +26,13 @@ export function TeachPanel(props: Props) {
   const { words, setup, match } = props;
   if (setup) return <SetupProgress setup={setup} onCancel={props.onCancelSetup} />;
   if (words.length === 0)
-    return <QuickSetup onStart={props.onStartSetup} persistent={props.persistent} />;
+    return (
+      <QuickSetup
+        onStart={props.onStartSetup}
+        persistent={props.persistent}
+        fewshot={props.fewshot}
+      />
+    );
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-line bg-paper/60 p-4" data-testid="teach-result">
@@ -172,9 +180,11 @@ function SetupProgress({ setup, onCancel }: { setup: Setup; onCancel: () => void
 function QuickSetup({
   onStart,
   persistent,
+  fewshot,
 }: {
   onStart: (labels: string[], takes: number) => void;
   persistent: boolean;
+  fewshot: { accuracy: number; words: number } | null;
 }) {
   const [labels, setLabels] = useState(QUICK);
   const submit = (e: SubmitEvent<HTMLFormElement>) => {
@@ -189,6 +199,13 @@ function QuickSetup({
           Record each word three times. Recognition then compares new attempts with your takes, so
           it works for your face and your way of speaking. About a minute.
         </p>
+        {fewshot !== null && (
+          <p className="mt-1 text-xs text-ink-muted" data-testid="fewshot">
+            Tested on {fewshot.words} words the model never trained on, with five takes each from a
+            new speaker: it picks the right one {Math.round(fewshot.accuracy * 100)}% of the time
+            (chance {Math.round(100 / fewshot.words)}%).
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-3 gap-2">
         {labels.map((l, i) => (

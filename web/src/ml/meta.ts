@@ -131,6 +131,9 @@ export function availableCategories(meta: ModelMeta, labels: Labels): CategoryIn
   return isPreview(meta) ? labels.categories : labels.categories.filter((c) => c.shipped);
 }
 
+/** Held-out top-1 a category needs to appear in "GRID words" (the pipeline's gate). */
+export const SHIP_BAR = 0.4;
+
 export type Mode = 'grid' | 'teach' | 'remote';
 
 /** GRID words if any category is offered, otherwise Teach your own words. */

@@ -1,10 +1,12 @@
 import type { CategoryResult } from '../ml/decide';
-import { CATEGORY_LABELS, type CategoryInfo } from '../ml/meta';
+import { CATEGORY_LABELS, SHIP_BAR, type CategoryInfo } from '../ml/meta';
 import { Guesses } from './Guesses';
 import { ResultHeadline } from './ResultHeadline';
 
 interface Props {
   categories: CategoryInfo[];
+  /** Categories held back by the accuracy gate, shown with their score. */
+  hidden: CategoryInfo[];
   categoryId: string | null;
   onCategory: (id: string) => void;
   preview: boolean;
@@ -13,7 +15,19 @@ interface Props {
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
-export function GridWordsPanel({ categories, categoryId, onCategory, preview, result }: Props) {
+// Why a hidden category fell short, where the reason is known.
+const HIDDEN_REASON: Record<string, string> = {
+  letter: 'b, p and m look alike on the lips',
+};
+
+export function GridWordsPanel({
+  categories,
+  hidden,
+  categoryId,
+  onCategory,
+  preview,
+  result,
+}: Props) {
   const active = categories.find((c) => c.id === categoryId) ?? categories[0];
   if (!active) {
     return (
@@ -59,6 +73,13 @@ export function GridWordsPanel({ categories, categoryId, onCategory, preview, re
             );
           })}
         </div>
+        {hidden.map((c) => (
+          <p key={c.id} className="mt-2 text-xs text-ink-muted" data-testid="hidden-category">
+            {CATEGORY_LABELS[c.id] ?? c.id} hidden:{' '}
+            {c.top1 === null ? 'not measured' : `${pct(c.top1)} on new speakers`}, under the{' '}
+            {pct(SHIP_BAR)} bar{HIDDEN_REASON[c.id] ? ` (${HIDDEN_REASON[c.id]})` : ''}.
+          </p>
+        ))}
       </fieldset>
 
       <div>
