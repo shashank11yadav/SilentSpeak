@@ -139,7 +139,7 @@ export function ReplayView({ clips, error, selected, onSelect, onLoaded, opening
         <div
           role="radiogroup"
           aria-label="Replay clip"
-          className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6"
+          className={`mt-3 grid grid-cols-3 gap-2 ${clips.length === 5 ? 'sm:grid-cols-5' : 'sm:grid-cols-6'}`}
         >
           {clips.map((c) => {
             const active = c.id === selected;
@@ -166,6 +166,11 @@ export function ReplayView({ clips, error, selected, onSelect, onLoaded, opening
             );
           })}
         </div>
+      )}
+      {clips?.[0]?.credit && (
+        <p className="mt-2 text-xs text-ink-muted">
+          Clips: {clips[0].credit}. Speakers the model never trained on.
+        </p>
       )}
     </div>
   );
