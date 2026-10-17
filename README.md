@@ -7,24 +7,57 @@ and the model both run on your device; the video never leaves it.
 **[Try it live](https://shashank11yadav.github.io/SilentSpeak/)**: allow the
 camera, hold Space, mouth a word, release. No camera? Use the Replay clips.
 
-<!-- gif -->
+![Replay mode reading three held-out GRID clips: "bin" and "two" are read correctly, "blue" is misread as "green"](docs/demo.gif)
+
+*Replay mode with the trained model on held-out GRID speakers (clips: GRID
+corpus, Cooke et al., CC BY 4.0). The "blue" clip is a real miss, read as
+"green"; the clips were picked by a fixed rule before training, not by result.*
+
+```mermaid
+flowchart LR
+  cam[Camera frame] --> mp["MediaPipe face landmarker<br/>(main thread)"]
+  mp -->|"40 lip points, eye corners,<br/>52 blendshapes, pose matrix"| feat["Features (TypeScript)<br/>pose removed, scale-normalised,<br/>mirror-invariant"]
+  feat -->|"resample to 25 fps,<br/>trim to lip motion"| worker["Web Worker<br/>ONNX Runtime Web<br/>(WebAssembly)"]
+  worker -->|"logits [45]"| grid[GRID words<br/>top 3 in category]
+  worker -->|"embedding [128]"| teach[Teach / Silent remote<br/>nearest prototype]
+  teach <--> idb[(IndexedDB<br/>this browser only)]
+```
+
+```mermaid
+flowchart LR
+  zips["GRID zips<br/>(MPEG-1 video, alignments)"] --> extract["extract<br/>MediaPipe over every frame"]
+  extract --> npz[("landmarks/sN.npz")]
+  npz --> prepare["prepare<br/>cut aligned words, +-2 frames"]
+  prepare --> train["train<br/>conv + BiGRU encoder<br/>cross-entropy + SupCon"]
+  train --> evaluate["evaluate<br/>held-out speakers,<br/>few-shot, thresholds, gate"]
+  evaluate --> export["export<br/>model.onnx, model-meta.json,<br/>labels.json"]
+  export --> web["web/public/models"]
+```
+
+The first diagram is what runs in the browser; the second is the training
+pipeline in `pipeline/`, which shares the feature code (checked against the
+TypeScript version, see [Feature parity](#feature-parity)).
 
 ## What you can do
 
-- **GRID words.** Pick a category (commands, colours, prepositions, letters,
-  digits, adverbs) and mouth one of its words. You get the top three guesses
-  and the accuracy that category reached on speakers the model never saw.
-  Categories below the accuracy bar are hidden (see [Results](#results)).
+- **GRID words.** Pick a category (commands, colours, prepositions, digits,
+  adverbs) and mouth one of its words. You get the top three guesses and the
+  accuracy that category reached on speakers the model never saw. Letters are
+  hidden because they fell below the accuracy bar (see [Results](#results)).
 - **Teach your own words.** Record three takes each of any words ("play",
   "pause", "next"). New attempts are matched against your takes by the
   model's lip-motion embedding, so this works for your face and your way of
   speaking, including words that are not in GRID. About a minute to set up.
+  On words the model never trained on it picks the right one 78.9% of the
+  time from five takes (chance 16.7%), which is the evidence this mode rests
+  on.
 - **Silent remote.** Map three taught words to play/pause, next and previous,
   and drive a small player with no hands and no voice: in a library, a loud
   room, or with your hands full.
-- **Replay.** Six short held-out GRID clips (mouth region plus landmarks) run
-  through exactly the same features and model as a live capture, for visitors
-  without a camera.
+- **Replay.** Short clips of held-out GRID speakers (mouth region plus
+  landmarks) run through exactly the same features and model as a live
+  capture, for visitors without a camera. Six clips are bundled, one per
+  category; the letter clip is not offered while letters are hidden.
 
 When the model is not confident it says **Not sure** instead of guessing. The
 thresholds are calibrated on validation speakers, not tuned by eye.
@@ -61,29 +94,7 @@ vocabulary comes from "Teach your own words" instead.
 
 ## How it works
 
-```mermaid
-flowchart LR
-  cam[Camera frame] --> mp["MediaPipe face landmarker<br/>(main thread, GPU or CPU)"]
-  mp -->|"40 lip points, eye corners,<br/>52 blendshapes, pose matrix"| feat["Features (TypeScript)<br/>pose removed, scale-normalised,<br/>mirror-invariant"]
-  feat -->|"resample to 25 fps,<br/>trim to lip motion"| worker["Web Worker<br/>ONNX Runtime Web<br/>WebGPU or WASM"]
-  worker -->|"logits [45]"| grid[GRID words<br/>top 3 in category]
-  worker -->|"embedding [128]"| teach[Teach / Silent remote<br/>nearest prototype]
-  teach <--> idb[(IndexedDB<br/>this browser only)]
-```
-
-Training is the same feature code in Python, checked against the TypeScript
-version on a shared fixture to 1e-4:
-
-```mermaid
-flowchart LR
-  zips["GRID zips<br/>(MPEG-1 video, alignments)"] --> extract["extract<br/>MediaPipe over every frame"]
-  extract --> npz[("landmarks/sN.npz")]
-  npz --> prepare["prepare<br/>cut aligned words, +-2 frames"]
-  prepare --> train["train<br/>conv + BiGRU encoder<br/>cross-entropy + SupCon"]
-  train --> evaluate["evaluate<br/>held-out speakers,<br/>few-shot, thresholds, gate"]
-  evaluate --> export["export<br/>model.onnx, model-meta.json,<br/>labels.json"]
-  export --> web["web/public/models"]
-```
+The two diagrams at the top give the overall flow. The details:
 
 **Features.** Per frame: the 18 left/right lip pairs folded into
 (half-width, mean height, mean depth), the y and z of the 4 midline points,
@@ -105,39 +116,179 @@ timestamps, resampled to 25 fps, and trimmed to where the lips actually move
 no lip motion, or lose the face for most frames are rejected with a "say it
 again" message rather than guessed.
 
+**Runtime.** The lip model runs on ONNX Runtime Web's WebAssembly build in a
+Web Worker, single-threaded (GitHub Pages cannot enable cross-origin
+isolation). There is no WebGPU path: the model is small, its GRU has no WebGPU
+kernel and would fall back to the CPU anyway, and the WebGPU runtime adds a
+28 MB wasm file. Importing `onnxruntime-web/wasm` instead of the default
+bundle cut the built site from 66 MB to 52 MB (most of what remains is
+MediaPipe's two wasm builds and the two models), and the build now fails if a
+WebGPU runtime file is emitted again.
+
+### Feature parity
+
+Training features come from Python and live features from TypeScript, so the
+two are checked against each other twice:
+
+- **Same inputs, same numbers.** `shared/fixtures/features.json` holds
+  synthetic landmark frames, including a mirrored frame and a 30 fps to 25 fps
+  resampling case. pytest and Vitest both reproduce the expected features to
+  1e-4.
+- **Same frames, same landmarks.** `shared/fixtures/grid-frames/` holds ten
+  real frames of held-out speaker s1 (utterance bbaf2n, picked to span a
+  closed to a wide-open mouth) as lossless PNGs, with what the Python
+  landmarker and `frame_features` make of them (`uv run silentspeak
+  frame-fixture`). A Playwright test runs the browser's MediaPipe on the same
+  PNGs, converts the result with the app's own code (including MediaPipe's
+  column-major pose matrix) and computes features with `features.ts`.
+
+Worst differences over the ten frames, browser against Python, both in IMAGE
+mode:
+
+| Browser delegate | Landmarks | Pose rotation | Lip geometry | Blendshapes | Tolerance (geometry, blendshapes) |
+|---|---:|---:|---:|---:|---|
+| CPU (WebAssembly) | 7e-6 | 3e-5 | 2e-5 | 2e-4 | 1e-3, 5e-3 |
+| GPU (WebGL) | 2.4e-3 | 1.0e-2 | 7.1e-3 | 6.1e-2 | 2e-2, 1.5e-1 |
+
+Landmarks are in MediaPipe's normalised image units, geometry in eye-distance
+units (a lip half-width is about 0.4) and blendshapes on their 0 to 1 scale.
+The CPU tolerances leave room for other processors; the GPU delegate, which
+the live camera tries first, runs the network at reduced precision and gets
+looser bounds. The check is sharp enough to matter: reading the pose matrix
+in the wrong layout moves the lip geometry by up to 0.012, twelve times the
+CPU tolerance, and the test asserts that too. It found no bug; the
+column-major conversion had only been unit-tested before. As a last
+end-to-end check, the six bundled replay clips give the same category
+probabilities in the browser as in Python's onnxruntime.
+
 ## Results
 
 <!-- metrics -->
 
-Every number above comes from `pipeline/reports/metrics.json`, written by
-`uv run silentspeak evaluate`. Splits are by speaker: test {s1, s2, s20, s22,
-s34}, validation {s3, s4, s23}, the rest train (s21 has no video). Six words
-(set, white, with, k, seven, soon) are held out of training entirely and used
-only for the few-shot evaluation: 6-way, 5-shot nearest prototype, 1000
-episodes, support and queries from one held-out speaker.
+Held-out test speakers s1, s2, s20, s22 and s34, 29,997 word segments.
 
-**Category gate.** A category is shown in "GRID words" only if its held-out
-top-1 is at least 40%. If none pass, the demo opens on "Teach your own words".
+| Category | Words | Top-1 | Top-3 | Chance top-1 | Chance top-3 | Shipped |
+|---|---:|---:|---:|---:|---:|:---:|
+| Commands (bin, lay, place) | 3 | **84.9%** | 100% | 33.3% | 100% | yes |
+| Colours (blue, green, red) | 3 | **75.6%** | 100% | 33.3% | 100% | yes |
+| Adverbs (again, now, please) | 3 | **75.1%** | 100% | 33.3% | 100% | yes |
+| Prepositions (at, by, in) | 3 | **64.9%** | 100% | 33.3% | 100% | yes |
+| Digits (zero to nine, without seven) | 9 | **64.4%** | 86.3% | 11.1% | 33.3% | yes |
+| Letters (a to z, without k and w) | 24 | 33.7% | 63.8% | 4.2% | 12.5% | **no** |
+
+<!-- /metrics -->
+
+Top-1 is the share of words whose first guess is right when the model chooses
+only among the words of the chosen category. In a three-word category top-3
+is trivially 100%; top-1 is the number to read. Across all 45 trained words
+at once, on 24,316 test segments, top-1 is 45.9% and top-5 80.7%.
+
+**Which categories ship.** A category appears in "GRID words" only if its
+held-out top-1 is at least 40% (the gate was fixed before training). Five of
+six pass. **Letters do not**: 33.7% is eight times chance but below the bar.
+Spelled letters are short and many of them look alike on the lips: b, p and m
+all close the lips the same way, and the difference between them is voicing
+and nasality, which happen out of sight. The app says so next to the
+categories instead of offering letters, and Replay does not offer the letter
+clip. The demo still opens on "GRID words", because at least one category
+passed.
+
+**Few-shot: the evidence for "Teach your own words".** Six words (set, white,
+with, k, seven, soon) were held out of training entirely. In 1000 episodes of
+6-way, 5-shot nearest-prototype matching, with support and query takes from
+one held-out test speaker, the right word is picked **78.9%** of the time
+(chance 16.7%). That is a fair stand-in for a visitor teaching their own
+words: new speaker, new words, five takes. The quick setup uses three takes,
+so expect a little less; adding takes helps.
+
+**"Not sure".** Each category has a confidence threshold calibrated on the
+validation speakers for 75% precision, and "Teach your own words" has a
+similarity and margin threshold calibrated the same way. Below them the app
+says "Not sure" rather than guess.
+
+Every number above comes from `pipeline/reports/metrics.json` (and its table
+`pipeline/reports/metrics.md`), written by `uv run silentspeak evaluate`.
+Splits are by speaker: test {s1, s2, s20, s22, s34}, validation {s3, s4,
+s23}, and the other 25 speakers with video train (s21 has no video).
+
+### Lessons learned: a third of the data was silently missing
+
+The first full run trained on 14 speakers instead of 25. The pipeline matched
+each alignment folder to a speaker's video zip by its name, and in the Zenodo
+GRID archive **19 of the 34 alignment folders carry another speaker's label**
+(s5 and s6 are swapped, s20's alignments are filed under s21, which has no
+video, and so on). Utterance ids such as `bbaf2n` are unique to a speaker, so
+a mislabelled folder's ids matched none of the videos it was paired with and
+those utterances were dropped without an error. Nothing crashed; the model
+was simply trained on less data.
+
+The fix (commit 2d1d9b4) stops trusting folder names: `read_alignments`
+matches each speaker's videos to whichever alignment folder contains the same
+utterance ids, and raises an error if no folder covers at least 90% of a
+speaker's videos. Before trusting the remapping, it was checked against the
+video itself: for the remapped speakers, MediaPipe's jawOpen is 1.6 to 2.6
+times higher inside aligned words than in the silences between them, which
+would not happen with another speaker's timings. Training segments went from
+43,271 to 121,023, and validation top-1 over all words went from 0.41 to
+0.52.
+
+The lesson: count what a data loader keeps, per speaker, and fail loudly
+when a source yields nothing; and when labels come from a second archive,
+validate them against the signal, not just the file names.
+
+### Real runtimes
+
+On an Apple M4 (10 cores, 16 GB), for the full corpus:
+
+| Step | Time | Notes |
+|---|---|---|
+| extract | about 46 min | 2.47 M frames, 6 worker processes; a face was found in 99.91% of frames |
+| prepare | 23 s | 197,254 word segments from 33 speakers; 117 dropped for a missing face, 629 as too short |
+| train | about 25 min | MPS, about 78 s per epoch over 121,023 segments; early stopped after 19 epochs, best at epoch 9 |
+| evaluate | 47 s | held-out speakers, few-shot episodes, threshold calibration |
+| export, replay-clips | 6 s | ONNX export with an onnxruntime check, six replay clips |
 
 ## Model card
 
-- **Data:** GRID audio-visual corpus (Cooke, Barker, Cunningham and Shao),
-  CC BY 4.0. 33 speakers with video, studio conditions, frontal faces, British
-  English.
-- **Intended use:** a demonstration of lip reading from landmarks, isolated
-  words, a cooperative user facing the camera. Personal, hands-free and
-  sound-free control with taught words.
-- **Not for:** transcribing speech, reading anyone without consent,
-  accessibility-critical input, or any decision about a person.
-- **Limitations:** a closed 51-word vocabulary for "GRID words"; look-alike
-  sounds (b/p/m, f/v) are confused; training speakers are few and from one
-  recording setup, so accuracy for other faces, accents, beards, glasses or
-  poor lighting may be lower than the held-out figures; profile views and
-  strong head turns break landmark tracking.
+- **Model:** lip-motion encoder (temporal convolutions, two-layer
+  bidirectional GRU, attention pooling), 1.9 M parameters, 7.6 MB ONNX.
+  Input: 25 fps sequences of 157 landmark features. Outputs: 45 word logits
+  and a 128-d embedding.
+- **Data:** the GRID audio-visual corpus (Cooke, Barker, Cunningham and Shao,
+  2006), CC BY 4.0, from [Zenodo](https://doi.org/10.5281/zenodo.3625687).
+  33 speakers with video, each reading 1000 six-word sentences from one fixed
+  grammar in a studio: frontal faces, even lighting, British English. 25
+  speakers train, 3 validate, 5 are held out for testing; six words are held
+  out of training for the few-shot test.
+- **Intended use:** silent commands for a single cooperative user who faces
+  the camera and teaches their own words ("Teach your own words", "Silent
+  remote"), plus a demonstration of speaker-independent recognition within
+  the GRID vocabulary.
+- **Not for:** general lip reading or transcription of speech, reading anyone
+  who has not chosen to use it, accessibility-critical or safety-critical
+  input, or any decision about a person.
+- **Performance:** on five speakers the model never saw, 64% to 85% top-1
+  within a shipped category (chance 11% to 33%); 45.9% top-1 across all 45
+  trained words; 78.9% 6-way 5-shot on words never trained on. See
+  [Results](#results).
+- **Limitations:**
+  - GRID is a fixed-grammar studio corpus. "GRID words" knows 51 words and
+    nothing else, and accuracy on a webcam in a living room will be lower
+    than the held-out studio figures.
+  - Speaker-independent accuracy is modest: letters miss the bar entirely,
+    and even shipped categories are wrong one time in four or five. The
+    headline mode is the one you teach, because it adapts to one face.
+  - Look-alike sounds (b/p/m, f/v) are confused; landmarks do not see the
+    tongue or teeth.
+  - Training faces are few and recorded in one setup, so other faces,
+    accents, beards, glasses or poor lighting may do worse. Profile views
+    and strong head turns break landmark tracking.
 - **Known failure cases:** mouthing too fast or too small (rejected as no
   motion), a second face in view (refused), the mouth leaving the frame
-  (flagged), and words that look alike in "Teach your own words" (reported as
-  not sure).
+  (flagged), and taught words that look alike (reported as not sure).
+- **Privacy:** everything runs on the device; no video, image or landmark is
+  uploaded, and taught words are stored only as embeddings in this browser
+  (see [Privacy](#privacy)).
 
 ## Privacy
 
@@ -187,21 +338,14 @@ uv run silentspeak export                 # web/public/models/
 uv run silentspeak replay-clips           # web/public/replay/ from held-out speakers
 ```
 
-Rough runtimes on an Apple M4 (10 cores, 16 GB):
-
-| Step | Time | Notes |
-|---|---|---|
-| extract | 30-45 min with 6 workers | about 3.4 ms per frame per worker (decode plus landmarks), 2.5 M frames |
-| prepare | 2-5 min | |
-| train | 30-60 min | about 95 ms per batch of 256 on MPS, early stopping on validation |
-| evaluate | 1-3 min | |
-| export, replay-clips | under 1 min | |
+Measured runtimes for each step are in [Real runtimes](#real-runtimes).
 
 Every command reads `configs/default.toml` (fixed seed, speaker split,
 few-shot words, model and training settings).
 `uv run silentspeak smoke` runs the whole chain on a synthetic corpus in a few
 seconds, and `uv run silentspeak export --stub` writes a random-weight model
-with the real I/O contract, which is what the app ships until training runs.
+with the real I/O contract, so the app can run before any training (it then
+shows an "untrained preview" notice).
 
 ### The model contract
 
