@@ -22,6 +22,7 @@ FACE_LANDMARKER_SHA256: Final[str] = (
     "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
 )
 CACHE_DIR: Final[Path] = PIPELINE_DIR / ".cache"
+MAX_MODEL_BYTES = 16 << 20  # the pinned file is 3.7 MB
 
 
 def _digest(path: Path) -> str:
@@ -33,19 +34,26 @@ def _digest(path: Path) -> str:
 
 
 def face_landmarker_model(cache_dir: Path = CACHE_DIR) -> Path:
-    """Path to the verified model file, downloading it on first use."""
+    """Path to the verified model file, downloading it on first use.
+
+    The download is hashed in memory and only then written, to a temporary
+    file that is renamed into place, so a bad download never lands on disk.
+    """
     path = cache_dir / "face_landmarker.task"
     if path.exists() and _digest(path) == FACE_LANDMARKER_SHA256:
         return path
+    with urllib.request.urlopen(FACE_LANDMARKER_URL, timeout=60) as resp:
+        body = resp.read(MAX_MODEL_BYTES + 1)
+    if len(body) > MAX_MODEL_BYTES:
+        raise RuntimeError(f"face_landmarker.task is larger than {MAX_MODEL_BYTES} bytes")
+    digest = hashlib.sha256(body).hexdigest()
+    if digest != FACE_LANDMARKER_SHA256:
+        raise RuntimeError(f"face_landmarker.task hash mismatch: {digest}")
     cache_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=cache_dir, delete=False, suffix=".part") as tmp:
         tmp_path = Path(tmp.name)
     try:
-        with urllib.request.urlopen(FACE_LANDMARKER_URL, timeout=60) as resp:
-            tmp_path.write_bytes(resp.read())
-        digest = _digest(tmp_path)
-        if digest != FACE_LANDMARKER_SHA256:
-            raise RuntimeError(f"face_landmarker.task hash mismatch: {digest}")
+        tmp_path.write_bytes(body)
         tmp_path.replace(path)
     finally:
         tmp_path.unlink(missing_ok=True)
