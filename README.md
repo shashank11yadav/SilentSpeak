@@ -388,16 +388,6 @@ web/        Vite, React, TypeScript and Tailwind app
   public/     model files and replay clips committed from the pipeline
 ```
 
-## What I would do next
-
-- Record a small webcam test set of my own (a few people, ordinary rooms)
-  and report it next to the GRID numbers, since the held-out studio figures
-  are the optimistic case.
-- Try a lightweight per-user adaptation step for "GRID words" using the
-  takes people already record in "Teach your own words".
-- Look for a second corpus with more varied faces and lighting before trying
-  letters again; more GRID training alone is unlikely to fix b/p/m.
-
 ## Credits
 
 - **GRID corpus**: Martin Cooke, Jon Barker, Stuart Cunningham and Xu Shao,
