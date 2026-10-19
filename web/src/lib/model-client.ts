@@ -48,14 +48,11 @@ export class ModelClient {
     this.worker.postMessage(msg, transfer);
   }
 
-  load(base: string): Promise<void> {
+  /** The worker fetches the model from this site's own models/ folder. */
+  load(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.loading = { resolve, reject };
-      const origin = globalThis.location.origin;
-      this.send({
-        type: 'load',
-        modelUrl: new URL(`${base}models/model.onnx`, origin).href,
-      });
+      this.send({ type: 'load' });
     });
   }
 

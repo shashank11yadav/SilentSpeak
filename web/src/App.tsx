@@ -76,7 +76,7 @@ export function App() {
     Promise.all([
       getJson(`${BASE}models/model-meta.json`),
       getJson(`${BASE}models/labels.json`),
-      client.load(BASE),
+      client.load(),
     ]).then(
       ([metaJson, labelsJson]) => {
         if (cancelled) return;
