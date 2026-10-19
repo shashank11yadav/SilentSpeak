@@ -1,6 +1,13 @@
 import { Lock, ScanFace, Waves, Brain } from 'lucide-react';
 import type { ModelMeta } from '../ml/meta';
-import { GRID_URL, LIPNET_URL, MEDIAPIPE_URL, REPO_URL, RUN_LOCALLY_URL } from '../links';
+import {
+  AUTHOR_URL,
+  GRID_URL,
+  LIPNET_URL,
+  MEDIAPIPE_URL,
+  REPO_URL,
+  RUN_LOCALLY_URL,
+} from '../links';
 
 const STEPS = [
   {
@@ -106,6 +113,11 @@ export function SiteFooter({ gridCredit }: { gridCredit: boolean }) {
           enough to run in a browser.
         </p>
         <p>
+          Built by{' '}
+          <a href={AUTHOR_URL} className="underline underline-offset-2">
+            Shashank Yadav
+          </a>{' '}
+          ·{' '}
           <a href={REPO_URL} className="underline underline-offset-2">
             Source on GitHub
           </a>{' '}
