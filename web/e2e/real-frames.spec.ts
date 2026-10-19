@@ -143,3 +143,39 @@ test.describe('real-frame parity with the Python pipeline', () => {
     expect(summary.blendshapes).toBeLessThanOrEqual(tol.blendshapes);
   });
 });
+
+test('MediaPipe usage metrics are blocked by the CSP and never leave the page', async ({
+  page,
+}) => {
+  // MediaPipe Tasks posts usage metrics to Google when a task closes (and
+  // every minute). The site promises no third-party requests, so the CSP's
+  // connect-src 'self' must stop them before they reach the network.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __blocked: string[] };
+    w.__blocked = [];
+    document.addEventListener('securitypolicyviolation', (e) => {
+      w.__blocked.push(e.blockedURI);
+    });
+  });
+  const external: string[] = [];
+  page.on('request', (req) => {
+    const url = new URL(req.url());
+    if (url.protocol.startsWith('http') && !['localhost', '127.0.0.1'].includes(url.hostname))
+      external.push(req.url());
+  });
+  await page.route('**/__fixtures/**', async (route) => {
+    const file = new URL(route.request().url()).pathname.split('/__fixtures/')[1] ?? '';
+    await route.fulfill({ body: readFileSync(join(FIXTURES, file)), contentType: 'image/png' });
+  });
+  await ready(page);
+  await page.waitForFunction(() => window.__silentspeak !== undefined);
+  const first = fixture.frames[0]!.file;
+  await page.evaluate(
+    (url) => window.__silentspeak?.imageFeatures([url], 'CPU'),
+    `./__fixtures/${first}`,
+  );
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __blocked: string[] }).__blocked))
+    .toContainEqual(expect.stringContaining('odml.pa.googleapis.com'));
+  expect(external).toEqual([]);
+});

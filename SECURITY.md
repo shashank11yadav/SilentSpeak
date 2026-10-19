@@ -26,6 +26,16 @@ The realistic risks are in the build and supply chain:
   from the locked npm packages and served from the same origin.
 - The page ships a Content-Security-Policy that allows only same-origin
   scripts, styles, workers and fetches, plus `'wasm-unsafe-eval'`, which
-  WebAssembly needs.
+  WebAssembly needs. The CSP also does real work: MediaPipe Tasks for the web
+  tries to post usage metrics (task type, running mode, OS, timings; never
+  images or landmarks) to `odml.pa.googleapis.com`, and `connect-src 'self'`
+  blocks that request before it leaves the browser. An end-to-end test runs
+  the landmarker and checks that the request is blocked and nothing external
+  is fetched.
+- The model worker only fetches the model from a path fixed at build time,
+  accepts messages only from the page that created it, and validates every
+  message's shape. Taught words and replay clips are validated when read, so
+  a corrupt IndexedDB or a broken clip file shows an error instead of breaking
+  the page.
 - The pipeline only opens GRID zips whose size matches the download manifest,
   reads frames from the zip in memory, and never extracts archive paths to disk.
