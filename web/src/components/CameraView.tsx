@@ -36,6 +36,11 @@ export function CameraView({
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const trackerRef = useRef<Tracker | null>(null);
+  // Bumped by every start and stop, so a start still waiting on the camera
+  // or the tracker can tell it was cancelled (tab hidden, Stop, unmount).
+  const attempt = useRef(0);
+  const wanted = useRef(false);
+  const unmounted = useRef(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [problem, setProblem] = useState<CameraProblem | 'tracker' | null>(null);
   const [tracking, setTracking] = useState<Tracking>('idle');
@@ -50,6 +55,8 @@ export function CameraView({
 
   const stop = useCallback(
     (next: Phase) => {
+      attempt.current += 1;
+      wanted.current = false;
       stopStream(streamRef.current);
       streamRef.current = null;
       const video = videoRef.current;
@@ -61,14 +68,24 @@ export function CameraView({
   );
 
   const start = useCallback(async () => {
+    const mine = ++attempt.current;
+    const cancelled = () => mine !== attempt.current;
+    wanted.current = true;
     setProblem(null);
     setPhase('starting');
     let stream: MediaStream;
     try {
       stream = await openCamera();
     } catch (err) {
+      if (cancelled()) return;
+      wanted.current = false;
       setProblem(cameraProblem(err));
       setPhase('error');
+      return;
+    }
+    // The tab was hidden or the camera stopped while the browser was asking.
+    if (cancelled()) {
+      stopStream(stream);
       return;
     }
     streamRef.current = stream;
@@ -77,10 +94,20 @@ export function CameraView({
       if (!video) throw new Error('video element missing');
       video.srcObject = stream;
       await video.play();
-      trackerRef.current ??= await createTracker(base);
+      if (!trackerRef.current) {
+        const tracker = await createTracker(base);
+        if (unmounted.current) {
+          tracker.close();
+          return;
+        }
+        trackerRef.current = tracker;
+      }
+      if (cancelled()) return; // stop() has already released the stream
       setPhase('running');
       report('no-face');
     } catch {
+      if (cancelled()) return;
+      wanted.current = false;
       stopStream(stream);
       streamRef.current = null;
       setProblem('tracker');
@@ -88,31 +115,35 @@ export function CameraView({
     }
   }, [base, report]);
 
-  // Release the camera whenever the tab is hidden or the page is left.
+  // Release the camera whenever the tab is hidden or the page is left,
+  // including while it is still starting.
   useEffect(() => {
     const onHide = () => {
-      if (document.visibilityState === 'hidden' && streamRef.current) stop('paused');
+      if (document.visibilityState === 'hidden' && wanted.current) stop('paused');
     };
     const onLeave = () => {
-      if (streamRef.current) stop('paused');
+      if (wanted.current) stop('paused');
     };
     document.addEventListener('visibilitychange', onHide);
     window.addEventListener('pagehide', onLeave);
     return () => {
       document.removeEventListener('visibilitychange', onHide);
       window.removeEventListener('pagehide', onLeave);
+      attempt.current += 1;
+      wanted.current = false;
       stopStream(streamRef.current);
       streamRef.current = null;
     };
   }, [stop]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    unmounted.current = false;
+    return () => {
+      unmounted.current = true;
       trackerRef.current?.close();
       trackerRef.current = null;
-    },
-    [],
-  );
+    };
+  }, []);
 
   // Landmark loop: MediaPipe on the main thread, skipping frames it cannot keep up with.
   useEffect(() => {
