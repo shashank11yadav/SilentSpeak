@@ -22,6 +22,7 @@ from .paths import (
     default_data_dir,
     landmarks_dir,
     prepared_path,
+    raw_dir,
 )
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help=__doc__)
@@ -41,6 +42,25 @@ def _setup() -> None:
 
 def _data(data_dir: Path | None) -> Path:
     return (data_dir or default_data_dir()).resolve()
+
+
+@app.command()
+def verify(data_dir: DataDir = None) -> None:
+    """Check every fully downloaded GRID file against the md5 in manifest.tsv."""
+    from .grid import complete_zips, verify_download
+
+    raw = raw_dir(_data(data_dir))
+    failed = 0
+    for name in sorted(complete_zips(raw)):
+        try:
+            verify_download(raw, name)
+        except ValueError as err:
+            failed += 1
+            typer.echo(f"FAILED {err}")
+        else:
+            typer.echo(f"ok {name}")
+    if failed:
+        raise typer.Exit(code=1)
 
 
 @app.command()

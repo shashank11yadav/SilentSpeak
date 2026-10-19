@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import hashlib
 import zipfile
 from pathlib import Path
 
 import pytest
 
+from silentspeak import grid
 from silentspeak.grid import (
     Word,
     complete_zips,
     parse_alignment,
     read_alignments,
     speaker_sort_key,
+    verify_download,
     word_window,
 )
 
@@ -108,3 +111,39 @@ def test_complete_zips_requires_a_manifest(tmp_path: Path) -> None:
 
 def test_speaker_sort_key_is_numeric() -> None:
     assert sorted(["s10", "s2", "s1"], key=speaker_sort_key) == ["s1", "s2", "s10"]
+
+
+def _raw_with_manifest(tmp_path: Path, body: bytes, md5: str) -> Path:
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    (raw / "s1.zip").write_bytes(body)
+    (tmp_path / "manifest.tsv").write_text(f"s1.zip\tmd5:{md5}\t{len(body)}\thttps://e/s1\n")
+    return raw
+
+
+def test_verify_download_accepts_the_manifest_md5(tmp_path: Path) -> None:
+    body = b"zip bytes"
+    raw = _raw_with_manifest(tmp_path, body, hashlib.md5(body).hexdigest())  # noqa: S324
+    verify_download(raw, "s1.zip")
+
+
+def test_verify_download_rejects_a_different_file(tmp_path: Path) -> None:
+    raw = _raw_with_manifest(tmp_path, b"zip bytes", hashlib.md5(b"other").hexdigest())  # noqa: S324
+    with pytest.raises(ValueError, match=r"s1\.zip.*md5"):
+        verify_download(raw, "s1.zip")
+
+
+@pytest.mark.parametrize("md5", ["x", "synthetic", "0" * 31, ""])
+def test_verify_download_needs_a_real_md5_in_the_manifest(tmp_path: Path, md5: str) -> None:
+    raw = _raw_with_manifest(tmp_path, b"zip bytes", md5)
+    with pytest.raises(ValueError, match="no md5"):
+        verify_download(raw, "s1.zip")
+
+
+def test_read_alignments_refuses_an_oversized_member(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = _swapped_alignments(tmp_path)
+    monkeypatch.setattr(grid, "MAX_ALIGNMENT_BYTES", 8)
+    with pytest.raises(ValueError, match="too large"):
+        read_alignments(path, "s5")

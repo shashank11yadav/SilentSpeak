@@ -19,6 +19,9 @@ from numpy.typing import NDArray
 
 U8 = NDArray[np.uint8]
 VIDEO_SUFFIX = ".mpg"
+# A GRID utterance is about 100-500 KB; the cap only bounds what one zip member
+# can make the reader hold in memory.
+MAX_VIDEO_BYTES = 64 << 20
 
 
 class SpeakerVideo:
@@ -46,8 +49,11 @@ class SpeakerVideo:
 
     def frames(self, utterance: str) -> Iterator[U8]:
         """RGB ``uint8[H, W, 3]`` frames in display order."""
+        name = self._names[utterance]
+        if self._zip.getinfo(name).file_size > MAX_VIDEO_BYTES:
+            raise ValueError(f"{self.path}: {name} is too large for a GRID video")
         # OpenCV's FFmpeg backend reads straight from a file-like object.
-        data = io.BytesIO(self._zip.read(self._names[utterance]))
+        data = io.BytesIO(self._zip.read(name))
         cap = cv2.VideoCapture(data, cv2.CAP_FFMPEG, [])  # type: ignore[call-overload]
         if not cap.isOpened():
             raise ValueError(f"{self.path}: cannot decode {utterance}")

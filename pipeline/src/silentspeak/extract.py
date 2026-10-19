@@ -3,7 +3,8 @@
 One ``sN.npz`` per speaker (see ``store.py``); a speaker whose file exists is
 skipped, so an interrupted run resumes where it stopped. Speakers run in
 parallel processes with ``--workers``. Only zips whose size matches
-``manifest.tsv`` are opened.
+``manifest.tsv`` are considered, and each one's md5 is checked against it
+before extraction.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from tqdm import tqdm
 
 from .assets import face_landmarker_model
 from .features import to_height_units
-from .grid import read_alignments, video_speakers, word_window
+from .grid import read_alignments, verify_download, video_speakers, word_window
 from .landmarks import BLENDSHAPE_NAMES, N_BLENDSHAPES, N_STORED, STORED_INDICES
 from .paths import raw_dir
 from .store import SpeakerLandmarks
@@ -170,6 +171,8 @@ def extract_all(
         log.info("already extracted, skipping: %s", done)
     if not todo:
         return {"speakers": {}, "skipped": done, "not_ready": not_ready}
+    for s in todo:
+        verify_download(raw, f"{s}.zip")
     model_path = face_landmarker_model()
     out_dir.mkdir(parents=True, exist_ok=True)
     per_speaker = limit_utterances or 1000

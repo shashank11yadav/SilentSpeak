@@ -12,12 +12,14 @@ Layout, checked against the real files:
 * ``sN.zip`` holds the speaker's 1000 videos (``sN/<utterance>.mpg``); see ``video.py``.
 * ``manifest.tsv`` next to ``raw/`` lists ``key, md5, size, url`` for every
   file. A zip is only read once its size matches, so a download in progress is
-  never opened.
+  never opened, and ``verify_download`` checks its md5 before extraction.
 """
 
 from __future__ import annotations
 
+import hashlib
 import math
+import re
 import zipfile
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -62,6 +64,14 @@ def word_window(word: Word, pad: int, n_frames: int) -> tuple[int, int]:
 
 
 MIN_ALIGNMENT_COVERAGE: Final[float] = 0.9
+# A real .align file is under 1 KB; anything this big is not one.
+MAX_ALIGNMENT_BYTES = 1 << 20
+
+
+def _read_alignment(zf: zipfile.ZipFile, name: str) -> list[Word]:
+    if zf.getinfo(name).file_size > MAX_ALIGNMENT_BYTES:
+        raise ValueError(f"{name} is too large for an alignment file")
+    return parse_alignment(zf.read(name).decode("ascii"))
 
 
 def _alignment_names(zf: zipfile.ZipFile) -> dict[str, dict[str, str]]:
@@ -101,7 +111,7 @@ def read_alignments(
                     f"(best: {folder}, {coverage(folder)}/{len(wanted)})"
                 )
         names = folders.get(folder, {})
-        return {utt: parse_alignment(zf.read(name).decode("ascii")) for utt, name in names.items()}
+        return {utt: _read_alignment(zf, name) for utt, name in names.items()}
 
 
 def read_manifest(path: Path) -> dict[str, int]:
@@ -112,6 +122,39 @@ def read_manifest(path: Path) -> dict[str, int]:
         if len(parts) >= 3 and parts[2].isdigit():
             sizes[parts[0]] = int(parts[2])
     return sizes
+
+
+def manifest_md5(path: Path) -> dict[str, str]:
+    """``file name -> md5`` from the ``md5:<hex>`` column of ``manifest.tsv``."""
+    sums: dict[str, str] = {}
+    for line in path.read_text().splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 2 and parts[1].startswith("md5:"):
+            sums[parts[0]] = parts[1].removeprefix("md5:").lower()
+    return sums
+
+
+_MD5: Final = re.compile(r"[0-9a-f]{32}")
+
+
+def verify_download(raw: Path, name: str) -> None:
+    """Raise unless ``raw/name`` has the md5 that ``manifest.tsv`` lists for it.
+
+    Zenodo publishes an md5 per file. It catches a truncated or corrupted
+    download, and a file swapped for something else, before its bytes reach
+    the zip reader and the video decoder.
+    """
+    expected = manifest_md5(raw.parent / "manifest.tsv").get(name, "")
+    if not _MD5.fullmatch(expected):
+        raise ValueError(f"manifest.tsv has no md5 for {name}")
+    h = hashlib.md5(usedforsecurity=False)
+    with (raw / name).open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 22), b""):
+            h.update(chunk)
+    if h.hexdigest() != expected:
+        raise ValueError(
+            f"{name}: md5 {h.hexdigest()} differs from manifest.tsv ({expected}); download it again"
+        )
 
 
 def complete_zips(raw: Path) -> set[str]:

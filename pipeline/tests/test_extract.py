@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import zipfile
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import cv2
 import numpy as np
 import pytest
 
+from silentspeak import video as video_module
 from silentspeak.extract import extract_all
 from silentspeak.store import SpeakerLandmarks
 from silentspeak.video import SpeakerVideo
@@ -38,9 +40,16 @@ def grid_like(root: Path, speaker: str, utterances: int, frames: int) -> Path:
     return zpath
 
 
+def _md5(path: Path) -> str:
+    return hashlib.md5(path.read_bytes()).hexdigest() if path.exists() else "0" * 32  # noqa: S324
+
+
 def _manifest(root: Path, sizes: dict[str, int]) -> None:
     (root / "manifest.tsv").write_text(
-        "".join(f"{k}\tmd5:x\t{v}\thttps://example.invalid/{k}\n" for k, v in sizes.items())
+        "".join(
+            f"{k}\tmd5:{_md5(root / 'raw' / k)}\t{v}\thttps://example.invalid/{k}\n"
+            for k, v in sizes.items()
+        )
     )
 
 
@@ -52,6 +61,26 @@ def test_speaker_video_reads_the_zenodo_layout(tmp_path: Path) -> None:
     assert len(frames) == 6
     assert frames[0].shape == (288, 360, 3)
     assert frames[0].dtype == np.uint8
+
+
+def test_speaker_video_refuses_an_oversized_member(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    zpath = grid_like(tmp_path, "s7", utterances=1, frames=3)
+    monkeypatch.setattr(video_module, "MAX_VIDEO_BYTES", 16)
+    with SpeakerVideo(zpath) as video, pytest.raises(ValueError, match="too large"):
+        next(video.frames("utt000"))
+
+
+def test_extract_refuses_a_zip_that_does_not_match_its_md5(tmp_path: Path) -> None:
+    zpath = grid_like(tmp_path, "s7", utterances=1, frames=3)
+    size = zpath.stat().st_size
+    (tmp_path / "manifest.tsv").write_text(
+        f"s7.zip\tmd5:{'0' * 32}\t{size}\thttps://example.invalid/s7.zip\n"
+    )
+    with pytest.raises(ValueError, match=r"s7\.zip.*md5"):
+        extract_all(tmp_path, tmp_path / "landmarks", workers=1)
+    assert not (tmp_path / "landmarks" / "s7.npz").exists()
 
 
 @pytest.mark.mediapipe
