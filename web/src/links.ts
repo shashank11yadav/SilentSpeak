@@ -1,4 +1,3 @@
-export const AUTHOR_URL = 'https://github.com/shashank11yadav';
 export const REPO_URL = 'https://github.com/shashank11yadav/SilentSpeak';
 export const RUN_LOCALLY_URL = `${REPO_URL}#run-it-locally`;
 export const GRID_URL = 'https://doi.org/10.5281/zenodo.3625687';

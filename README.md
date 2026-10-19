@@ -4,8 +4,6 @@ Mouth a word without making a sound and a small model reads it from the
 motion of your lips, live in the browser. The face landmarks and the model
 both run on your device, so the video never leaves it.
 
-Built by [Shashank Yadav](https://github.com/shashank11yadav).
-
 **[Try it live](https://shashank11yadav.github.io/SilentSpeak/)**: allow the
 camera, hold Space, mouth a word, release. No camera? Use the Replay clips.
 
