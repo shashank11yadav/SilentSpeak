@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import { CATEGORY_LABELS } from '../ml/meta';
 import { mouthOpening } from '../ml/tracking';
 import { drawLips, pointsMapper } from '../lib/draw';
-import { loadClipLandmarks, type ClipLandmarks, type ReplayClip } from '../lib/replay';
+import { checkSprite, loadClipLandmarks, type ClipLandmarks, type ReplayClip } from '../lib/replay';
 
 const SCALE = 4; // canvas pixels per sprite pixel
 
@@ -37,19 +37,24 @@ export function ReplayView({ clips, error, selected, onSelect, onLoaded, opening
     const img = new Image();
     img.decoding = 'async';
     img.src = clip.spriteUrl;
-    Promise.all([loadClipLandmarks(clip), img.decode()]).then(
-      ([lm]) => {
-        if (cancelled) return;
-        setLoadError(null);
-        setLoaded({ id: clip.id, lm, img });
-        onLoaded({ clip, landmarks: lm });
-      },
-      (err: unknown) => {
-        if (cancelled) return;
-        setLoadError(err instanceof Error ? err.message : String(err));
-        onLoaded(null);
-      },
-    );
+    Promise.all([loadClipLandmarks(clip), img.decode()])
+      .then(([lm]) => {
+        checkSprite(clip, img.naturalWidth, img.naturalHeight);
+        return lm;
+      })
+      .then(
+        (lm) => {
+          if (cancelled) return;
+          setLoadError(null);
+          setLoaded({ id: clip.id, lm, img });
+          onLoaded({ clip, landmarks: lm });
+        },
+        (err: unknown) => {
+          if (cancelled) return;
+          setLoadError(err instanceof Error ? err.message : String(err));
+          onLoaded(null);
+        },
+      );
     return () => {
       cancelled = true;
     };
