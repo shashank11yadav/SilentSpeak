@@ -7,6 +7,9 @@ both run on your device, so the video never leaves it.
 **[Try it live](https://shashank11yadav.github.io/SilentSpeak/)**: allow the
 camera, hold Space, mouth a word, release. No camera? Use the Replay clips.
 
+Write-up and other projects:
+[shashankyadav.dev/work/silentspeak](https://www.shashankyadav.dev/work/silentspeak)
+
 ![Replay mode reading three held-out GRID clips: "bin" and "two" are read correctly, "blue" is misread as "green"](docs/demo.gif)
 
 *Replay mode with the trained model on held-out GRID speakers (clips: GRID
