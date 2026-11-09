@@ -22,6 +22,7 @@ const MODEL = {
   maxBytes: 16 * 1024 * 1024, // the pinned file is 3.7 MB
 };
 
+// tasks-vision 1.2.2 dropped the non-SIMD build; every current browser runs the SIMD one.
 const COPIES = [
   [
     '@mediapipe/tasks-vision/wasm/vision_wasm_internal.js',
@@ -30,14 +31,6 @@ const COPIES = [
   [
     '@mediapipe/tasks-vision/wasm/vision_wasm_internal.wasm',
     'mediapipe/wasm/vision_wasm_internal.wasm',
-  ],
-  [
-    '@mediapipe/tasks-vision/wasm/vision_wasm_nosimd_internal.js',
-    'mediapipe/wasm/vision_wasm_nosimd_internal.js',
-  ],
-  [
-    '@mediapipe/tasks-vision/wasm/vision_wasm_nosimd_internal.wasm',
-    'mediapipe/wasm/vision_wasm_nosimd_internal.wasm',
   ],
 ];
 
