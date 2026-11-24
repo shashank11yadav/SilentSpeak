@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.2.3",
-    "lucide-react": "1.72.0",
+    "lucide-react": "1.77.0",
     "onnxruntime-web": "1.31.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
